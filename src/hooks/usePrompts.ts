@@ -49,10 +49,20 @@ export default function usePrompts() {
     );
   };
 
+  const replacePrompts = (items: Prompt[]) => {
+    setPrompts(items);
+  };
+
+  const clearPrompts = () => {
+    setPrompts([]);
+  };
+
   return {
     prompts,
     addPrompt,
     deletePrompt,
     toggleFavorite,
+    replacePrompts,
+    clearPrompts,
   };
 }
