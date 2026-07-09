@@ -1,79 +1,43 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import PromptForm from "./PromptForm";
 import PromptList from "./PromptList";
 import EmptyState from "./EmptyState";
 import SearchBar from "./SearchBar";
 
-import useLocalStorage from "../hooks/useLocalStorage";
+import usePrompts from "../hooks/usePrompts";
+import usePromptSearch from "../hooks/usePromptSearch";
 
-import type { Prompt } from "../types/prompt";
+import { providers } from "../data/providers";
 
 export default function PromptLibrary() {
   const [input, setInput] = useState("");
+  const [provider, setProvider] = useState("chatgpt");
   const [search, setSearch] = useState("");
+  const [filterProvider, setFilterProvider] = useState("all");
 
-  const [prompts, setPrompts] = useLocalStorage<Prompt[]>(
-    "aihub-prompts",
-    []
-  );
+  const {
+    prompts,
+    addPrompt,
+    deletePrompt,
+    toggleFavorite,
+  } = usePrompts();
 
-  const addPrompt = () => {
-    if (!input.trim()) return;
+  const filteredPrompts = usePromptSearch({
+    prompts,
+    keyword: search,
+    provider: filterProvider,
+  });
 
-    const now = new Date().toISOString();
-
-    const newPrompt: Prompt = {
-      id: crypto.randomUUID(),
-      title: "AIHub",
-      content: input,
-      provider: "chatgpt",
-      tags: [],
-      favorite: false,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setPrompts([newPrompt, ...prompts]);
+  const handleAddPrompt = () => {
+    addPrompt(input, provider);
     setInput("");
-  };
-
-  const deletePrompt = (id: string) => {
-    setPrompts(prompts.filter((prompt) => prompt.id !== id));
-  };
-
-  const toggleFavorite = (id: string) => {
-    setPrompts(
-      prompts.map((prompt) =>
-        prompt.id === id
-          ? {
-              ...prompt,
-              favorite: !prompt.favorite,
-              updatedAt: new Date().toISOString(),
-            }
-          : prompt
-      )
-    );
   };
 
   const copyPrompt = async (content: string) => {
     await navigator.clipboard.writeText(content);
     alert("已複製！");
   };
-
-  const filteredPrompts = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    if (!keyword) {
-      return prompts;
-    }
-
-    return prompts.filter(
-      (prompt) =>
-        prompt.title.toLowerCase().includes(keyword) ||
-        prompt.content.toLowerCase().includes(keyword)
-    );
-  }, [prompts, search]);
 
   return (
     <div
@@ -84,6 +48,37 @@ export default function PromptLibrary() {
     >
       <h2>📂 Prompt Library</h2>
 
+      <div
+        style={{
+          marginBottom: 20,
+        }}
+      >
+        <label>Provider Filter：</label>
+
+        <select
+          value={filterProvider}
+          onChange={(event) =>
+            setFilterProvider(event.target.value)
+          }
+          style={{
+            marginLeft: 10,
+            padding: 8,
+            borderRadius: 8,
+          }}
+        >
+          <option value="all">All</option>
+
+          {providers.map((item) => (
+            <option
+              key={item.id}
+              value={item.id}
+            >
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <SearchBar
         value={search}
         onChange={setSearch}
@@ -91,8 +86,10 @@ export default function PromptLibrary() {
 
       <PromptForm
         value={input}
+        provider={provider}
         onChange={setInput}
-        onSubmit={addPrompt}
+        onProviderChange={setProvider}
+        onSubmit={handleAddPrompt}
       />
 
       <hr
