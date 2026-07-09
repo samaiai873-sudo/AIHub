@@ -42,6 +42,20 @@ export default function PromptLibrary() {
     setPrompts(prompts.filter((prompt) => prompt.id !== id));
   };
 
+  const toggleFavorite = (id: string) => {
+    setPrompts(
+      prompts.map((prompt) =>
+        prompt.id === id
+          ? {
+              ...prompt,
+              favorite: !prompt.favorite,
+              updatedAt: new Date().toISOString(),
+            }
+          : prompt
+      )
+    );
+  };
+
   const copyPrompt = async (content: string) => {
     await navigator.clipboard.writeText(content);
     alert("已複製！");
@@ -54,12 +68,11 @@ export default function PromptLibrary() {
       return prompts;
     }
 
-    return prompts.filter((prompt) => {
-      return (
+    return prompts.filter(
+      (prompt) =>
         prompt.title.toLowerCase().includes(keyword) ||
         prompt.content.toLowerCase().includes(keyword)
-      );
-    });
+    );
   }, [prompts, search]);
 
   return (
@@ -95,6 +108,7 @@ export default function PromptLibrary() {
           prompts={filteredPrompts}
           onCopy={copyPrompt}
           onDelete={deletePrompt}
+          onToggleFavorite={toggleFavorite}
         />
       )}
     </div>
