@@ -1,38 +1,116 @@
-import { providers } from "../data/providers";
+import { useEffect } from "react";
+
+import { aiPlatforms } from "../data/aiPlatforms";
+import useAgents from "../hooks/useAgents";
 
 type PromptFormProps = {
   value: string;
-  provider: string;
+  platform: string;
+  model: string;
   onChange: (value: string) => void;
-  onProviderChange: (provider: string) => void;
+  onPlatformChange: (platform: string) => void;
+  onModelChange: (model: string) => void;
   onSubmit: () => void;
 };
 
 export default function PromptForm({
   value,
-  provider,
+  platform,
+  model,
   onChange,
-  onProviderChange,
+  onPlatformChange,
+  onModelChange,
   onSubmit,
 }: PromptFormProps) {
+  const { enabledAgents } = useAgents();
+
+  const enabledPlatforms = aiPlatforms.filter((item) =>
+    enabledAgents.includes(item.id)
+  );
+
+  const currentPlatform =
+    enabledPlatforms.find((item) => item.id === platform) ??
+    enabledPlatforms[0];
+
+  useEffect(() => {
+    if (!currentPlatform) return;
+
+    if (platform !== currentPlatform.id) {
+      onPlatformChange(currentPlatform.id);
+      return;
+    }
+
+    const modelExists = currentPlatform.models.some(
+      (item) => item.id === model
+    );
+
+    if (!modelExists) {
+      onModelChange(currentPlatform.models[0].id);
+    }
+  }, [
+    currentPlatform,
+    platform,
+    model,
+    onPlatformChange,
+    onModelChange,
+  ]);
+
+  if (enabledPlatforms.length === 0) {
+    return (
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 8,
+          background: "#2d2d2d",
+          color: "white",
+        }}
+      >
+        ⚠️ 請先到 AI Agent Manager 啟用至少一個 AI Platform。
+      </div>
+    );
+  }
+
   return (
     <>
+      <label>AI Platform</label>
+
       <select
-        value={provider}
-        onChange={(event) => onProviderChange(event.target.value)}
+        value={platform}
+        onChange={(event) =>
+          onPlatformChange(event.target.value)
+        }
         style={{
           width: "100%",
-          padding: "10px",
+          padding: 10,
           borderRadius: 8,
           marginBottom: 12,
           boxSizing: "border-box",
         }}
       >
-        {providers.map((item) => (
-          <option
-            key={item.id}
-            value={item.id}
-          >
+        {enabledPlatforms.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.icon} {item.name}
+          </option>
+        ))}
+      </select>
+
+      <label>Model</label>
+
+      <select
+        value={model}
+        onChange={(event) =>
+          onModelChange(event.target.value)
+        }
+        style={{
+          width: "100%",
+          padding: 10,
+          borderRadius: 8,
+          marginBottom: 12,
+          boxSizing: "border-box",
+        }}
+      >
+        {currentPlatform.models.map((item) => (
+          <option key={item.id} value={item.id}>
             {item.name}
           </option>
         ))}
@@ -40,7 +118,9 @@ export default function PromptForm({
 
       <textarea
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
         rows={5}
         style={{
           width: "100%",

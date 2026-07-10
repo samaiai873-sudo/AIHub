@@ -6,6 +6,7 @@ import EmptyState from "./EmptyState";
 import SearchBar from "./SearchBar";
 import PromptToolbar from "./PromptToolbar";
 import DashboardStats from "./DashboardStats";
+import AIAgentManager from "./AIAgentManager";
 
 import usePrompts from "../hooks/usePrompts";
 import usePromptSearch from "../hooks/usePromptSearch";
@@ -15,15 +16,24 @@ import {
   importPrompts,
 } from "../utils/promptImportExport";
 
-import { providers } from "../data/providers";
+import { aiPlatforms } from "../data/aiPlatforms";
 
 export default function PromptLibrary() {
   const [input, setInput] = useState("");
-  const [provider, setProvider] = useState("chatgpt");
-  const [search, setSearch] = useState("");
-  const [filterProvider, setFilterProvider] = useState("all");
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [platform, setPlatform] =
+    useState("chatgpt");
+
+  const [model, setModel] =
+    useState("gpt-5");
+
+  const [search, setSearch] = useState("");
+
+  const [filterProvider, setFilterProvider] =
+    useState("all");
+
+  const fileInputRef =
+    useRef<HTMLInputElement>(null);
 
   const {
     prompts,
@@ -47,38 +57,43 @@ export default function PromptLibrary() {
   ).length;
 
   const providerCount = new Set(
-  prompts.map((prompt) => prompt.platform)
-).size;
+    prompts.map((prompt) => prompt.platform)
+  ).size;
 
   const currentFilter =
     filterProvider === "all"
       ? "All"
-      : providers.find(
-          (item) => item.id === filterProvider
+      : aiPlatforms.find(
+          (item) =>
+            item.id === filterProvider
         )?.name ?? filterProvider;
 
   const handleAddPrompt = () => {
-   addPrompt(
-  input,
-  provider,
-  "gpt-5"
-);
+    addPrompt(
+      input,
+      platform,
+      model
+    );
+
     setInput("");
   };
 
   const handleImport = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const file = event.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
     if (!file) return;
 
     try {
-      const items = await importPrompts(file);
+      const items =
+        await importPrompts(file);
 
-      const confirmed = window.confirm(
-        "這將覆蓋目前所有 Prompt，是否繼續？"
-      );
+      const confirmed =
+        window.confirm(
+          "這將覆蓋目前所有 Prompt，是否繼續？"
+        );
 
       if (!confirmed) return;
 
@@ -96,8 +111,13 @@ export default function PromptLibrary() {
     }
   };
 
-  const copyPrompt = async (content: string) => {
-    await navigator.clipboard.writeText(content);
+  const copyPrompt = async (
+    content: string
+  ) => {
+    await navigator.clipboard.writeText(
+      content
+    );
+
     alert("已複製！");
   };
 
@@ -111,7 +131,8 @@ export default function PromptLibrary() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent:
+            "space-between",
           alignItems: "center",
           marginBottom: 20,
         }}
@@ -125,8 +146,12 @@ export default function PromptLibrary() {
         </h2>
 
         <PromptToolbar
-          onImport={() => fileInputRef.current?.click()}
-          onExport={() => exportPrompts(prompts)}
+          onImport={() =>
+            fileInputRef.current?.click()
+          }
+          onExport={() =>
+            exportPrompts(prompts)
+          }
         />
       </div>
 
@@ -136,6 +161,8 @@ export default function PromptLibrary() {
         providers={providerCount}
         currentFilter={currentFilter}
       />
+
+      <AIAgentManager />
 
       <input
         ref={fileInputRef}
@@ -152,12 +179,16 @@ export default function PromptLibrary() {
           marginBottom: 20,
         }}
       >
-        <label>Provider Filter：</label>
+        <label>
+          Platform Filter：
+        </label>
 
         <select
           value={filterProvider}
           onChange={(event) =>
-            setFilterProvider(event.target.value)
+            setFilterProvider(
+              event.target.value
+            )
           }
           style={{
             marginLeft: 10,
@@ -169,14 +200,16 @@ export default function PromptLibrary() {
             All
           </option>
 
-          {providers.map((item) => (
-            <option
-              key={item.id}
-              value={item.id}
-            >
-              {item.name}
-            </option>
-          ))}
+          {aiPlatforms.map(
+            (item) => (
+              <option
+                key={item.id}
+                value={item.id}
+              >
+                {item.name}
+              </option>
+            )
+          )}
         </select>
       </div>
 
@@ -187,9 +220,13 @@ export default function PromptLibrary() {
 
       <PromptForm
         value={input}
-        provider={provider}
+        platform={platform}
+        model={model}
         onChange={setInput}
-        onProviderChange={setProvider}
+        onPlatformChange={
+          setPlatform
+        }
+        onModelChange={setModel}
         onSubmit={handleAddPrompt}
       />
 
@@ -199,26 +236,33 @@ export default function PromptLibrary() {
         }}
       />
 
-      {filteredPrompts.length === 0 ? (
+      {filteredPrompts.length ===
+      0 ? (
         <EmptyState />
       ) : (
         <PromptList
-          prompts={filteredPrompts}
+          prompts={
+            filteredPrompts
+          }
           onCopy={copyPrompt}
-          onDelete={deletePrompt}
-          onToggleFavorite={toggleFavorite}
+          onDelete={
+            deletePrompt
+          }
+          onToggleFavorite={
+            toggleFavorite
+          }
           onUpdate={(
-  id,
-  content,
-  platform,
-  model
-) =>
-  updatePrompt(id, {
-    content,
-    platform,
-    model,
-  })
-}
+            id,
+            content,
+            platform,
+            model
+          ) =>
+            updatePrompt(id, {
+              content,
+              platform,
+              model,
+            })
+          }
         />
       )}
     </div>
