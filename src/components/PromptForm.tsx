@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { aiPlatforms } from "../data/aiPlatforms";
-import useAgents from "../hooks/useAgents";
+import { useAgentContext } from "../context/AgentContext";
 
 type PromptFormProps = {
   value: string;
@@ -22,7 +22,7 @@ export default function PromptForm({
   onModelChange,
   onSubmit,
 }: PromptFormProps) {
-  const { enabledAgents } = useAgents();
+  const { enabledAgents } = useAgentContext();
 
   const enabledPlatforms = aiPlatforms.filter((item) =>
     enabledAgents.includes(item.id)

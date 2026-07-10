@@ -1,10 +1,19 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-createRoot(document.getElementById('root')!).render(
+import App from "./App";
+
+import { AgentProvider } from "./context/AgentContext";
+import { ConversationProvider } from "./context/ConversationContext";
+
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <AgentProvider>
+      <ConversationProvider>
+        <App />
+      </ConversationProvider>
+    </AgentProvider>
+  </StrictMode>
+);

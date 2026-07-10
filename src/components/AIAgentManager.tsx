@@ -1,11 +1,11 @@
 import { aiPlatforms } from "../data/aiPlatforms";
-import useAgents from "../hooks/useAgents";
+import { useAgentContext } from "../context/AgentContext";
 
 export default function AIAgentManager() {
   const {
     isEnabled,
     toggleAgent,
-  } = useAgents();
+  } = useAgentContext();
 
   return (
     <div
@@ -52,7 +52,7 @@ export default function AIAgentManager() {
             />
 
             <strong>
-              {platform.name}
+              {platform.icon} {platform.name}
             </strong>
           </div>
 

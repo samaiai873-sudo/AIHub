@@ -3,10 +3,12 @@ import "./App.css";
 
 import Sidebar from "./components/Sidebar";
 import PromptLibrary from "./components/PromptLibrary";
-import Home from "./pages/Home";
+import ConversationWorkspace from "./components/ConversationWorkspace";
 
 export default function App() {
-  const [page, setPage] = useState<"home" | "prompt">("home");
+  const [page, setPage] = useState<
+    "conversation" | "prompt"
+  >("conversation");
 
   return (
     <div
@@ -16,15 +18,25 @@ export default function App() {
         background: "#202123",
       }}
     >
-      <Sidebar onOpenPrompt={() => setPage("prompt")} />
+      <Sidebar
+        onOpenPrompt={() =>
+          setPage("prompt")
+        }
+      />
 
       <main
         style={{
           flex: 1,
           overflow: "auto",
+          padding: 20,
+          boxSizing: "border-box",
         }}
       >
-        {page === "home" ? <Home /> : <PromptLibrary />}
+        {page === "conversation" ? (
+          <ConversationWorkspace />
+        ) : (
+          <PromptLibrary />
+        )}
       </main>
     </div>
   );
