@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import PromptForm from "./PromptForm";
 import PromptList from "./PromptList";
 import EmptyState from "./EmptyState";
 import SearchBar from "./SearchBar";
+import PromptToolbar from "./PromptToolbar";
 
 import usePrompts from "../hooks/usePrompts";
 import usePromptSearch from "../hooks/usePromptSearch";
+
+import {
+  exportPrompts,
+  importPrompts,
+} from "../utils/promptImportExport";
 
 import { providers } from "../data/providers";
 
@@ -16,10 +22,13 @@ export default function PromptLibrary() {
   const [search, setSearch] = useState("");
   const [filterProvider, setFilterProvider] = useState("all");
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const {
     prompts,
     addPrompt,
     updatePrompt,
+    replacePrompts,
     deletePrompt,
     toggleFavorite,
   } = usePrompts();
@@ -35,6 +44,36 @@ export default function PromptLibrary() {
     setInput("");
   };
 
+  const handleImport = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      const items = await importPrompts(file);
+
+      const confirmed = window.confirm(
+        "這將覆蓋目前所有 Prompt，是否繼續？"
+      );
+
+      if (!confirmed) return;
+
+      replacePrompts(items);
+
+      alert("匯入成功！");
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "匯入失敗"
+      );
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   const copyPrompt = async (content: string) => {
     await navigator.clipboard.writeText(content);
     alert("已複製！");
@@ -47,7 +86,31 @@ export default function PromptLibrary() {
         color: "white",
       }}
     >
-      <h2>📂 Prompt Library</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+        }}
+      >
+        <h2 style={{ margin: 0 }}>
+          📂 Prompt Library
+        </h2>
+
+        <PromptToolbar
+          onImport={() => fileInputRef.current?.click()}
+          onExport={() => exportPrompts(prompts)}
+        />
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: "none" }}
+        onChange={handleImport}
+      />
 
       <div
         style={{
@@ -107,11 +170,7 @@ export default function PromptLibrary() {
           onCopy={copyPrompt}
           onDelete={deletePrompt}
           onToggleFavorite={toggleFavorite}
-          onUpdate={(
-            id,
-            content,
-            provider
-          ) =>
+          onUpdate={(id, content, provider) =>
             updatePrompt(id, {
               content,
               provider,
