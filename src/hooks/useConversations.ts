@@ -11,6 +11,12 @@ export default function useConversations() {
       []
     );
 
+  const [currentConversationId, setCurrentConversationId] =
+    useLocalStorage<string | null>(
+      "aihub-current-conversation",
+      null
+    );
+
   const createConversation = (
     title = "New Conversation"
   ) => {
@@ -28,6 +34,8 @@ export default function useConversations() {
       conversation,
       ...prev,
     ]);
+
+    setCurrentConversationId(conversation.id);
 
     return conversation.id;
   };
@@ -60,6 +68,12 @@ export default function useConversations() {
     );
   };
 
+  const selectConversation = (
+    conversationId: string
+  ) => {
+    setCurrentConversationId(conversationId);
+  };
+
   const deleteConversation = (
     conversationId: string
   ) => {
@@ -69,12 +83,25 @@ export default function useConversations() {
           conversation.id !== conversationId
       )
     );
+
+    if (currentConversationId === conversationId) {
+      setCurrentConversationId(null);
+    }
   };
+
+  const currentConversation =
+    conversations.find(
+      (conversation) =>
+        conversation.id === currentConversationId
+    ) ?? null;
 
   return {
     conversations,
+    currentConversation,
+    currentConversationId,
     createConversation,
     addMessage,
     deleteConversation,
+    selectConversation,
   };
 }
