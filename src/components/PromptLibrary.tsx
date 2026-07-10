@@ -19,6 +19,7 @@ export default function PromptLibrary() {
   const {
     prompts,
     addPrompt,
+    updatePrompt,
     deletePrompt,
     toggleFavorite,
   } = usePrompts();
@@ -106,6 +107,16 @@ export default function PromptLibrary() {
           onCopy={copyPrompt}
           onDelete={deletePrompt}
           onToggleFavorite={toggleFavorite}
+          onUpdate={(
+            id,
+            content,
+            provider
+          ) =>
+            updatePrompt(id, {
+              content,
+              provider,
+            })
+          }
         />
       )}
     </div>

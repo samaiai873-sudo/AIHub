@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Prompt } from "../types/prompt";
 
 type PromptCardProps = {
@@ -5,6 +6,11 @@ type PromptCardProps = {
   onCopy: (content: string) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onUpdate: (
+    id: string,
+    content: string,
+    provider: string
+  ) => void;
 };
 
 export default function PromptCard({
@@ -12,7 +18,23 @@ export default function PromptCard({
   onCopy,
   onDelete,
   onToggleFavorite,
+  onUpdate,
 }: PromptCardProps) {
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(prompt.content);
+
+  const save = () => {
+    if (!content.trim()) return;
+
+    onUpdate(prompt.id, content, prompt.provider);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setContent(prompt.content);
+    setEditing(false);
+  };
+
   return (
     <div
       style={{
@@ -32,19 +54,33 @@ export default function PromptCard({
         {prompt.title}
       </h3>
 
-      <div
-        style={{
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {prompt.content}
-      </div>
+      {editing ? (
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={6}
+          style={{
+            width: "100%",
+            resize: "vertical",
+            marginBottom: 15,
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {prompt.content}
+        </div>
+      )}
 
       <div
         style={{
           marginTop: 15,
           display: "flex",
           gap: 10,
+          flexWrap: "wrap",
         }}
       >
         <button
@@ -53,11 +89,31 @@ export default function PromptCard({
           {prompt.favorite ? "⭐ 已收藏" : "☆ 收藏"}
         </button>
 
-        <button
-          onClick={() => onCopy(prompt.content)}
-        >
-          📋 複製
-        </button>
+        {!editing && (
+          <button
+            onClick={() => onCopy(prompt.content)}
+          >
+            📋 複製
+          </button>
+        )}
+
+        {editing ? (
+          <>
+            <button onClick={save}>
+              💾 儲存
+            </button>
+
+            <button onClick={cancel}>
+              ❌ 取消
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+          >
+            ✏️ 編輯
+          </button>
+        )}
 
         <button
           onClick={() => onDelete(prompt.id)}

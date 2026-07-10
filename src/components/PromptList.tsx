@@ -6,6 +6,11 @@ type PromptListProps = {
   onCopy: (content: string) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onUpdate: (
+    id: string,
+    content: string,
+    provider: string
+  ) => void;
 };
 
 export default function PromptList({
@@ -13,6 +18,7 @@ export default function PromptList({
   onCopy,
   onDelete,
   onToggleFavorite,
+  onUpdate,
 }: PromptListProps) {
   return (
     <>
@@ -23,6 +29,7 @@ export default function PromptList({
           onCopy={onCopy}
           onDelete={onDelete}
           onToggleFavorite={onToggleFavorite}
+          onUpdate={onUpdate}
         />
       ))}
     </>

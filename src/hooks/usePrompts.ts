@@ -29,6 +29,23 @@ export default function usePrompts() {
     setPrompts((prev) => [newPrompt, ...prev]);
   };
 
+  const updatePrompt = (
+    id: string,
+    updates: Pick<Prompt, "content" | "provider">
+  ) => {
+    setPrompts((prev) =>
+      prev.map((prompt) =>
+        prompt.id === id
+          ? {
+              ...prompt,
+              ...updates,
+              updatedAt: new Date().toISOString(),
+            }
+          : prompt
+      )
+    );
+  };
+
   const deletePrompt = (id: string) => {
     setPrompts((prev) =>
       prev.filter((prompt) => prompt.id !== id)
@@ -60,6 +77,7 @@ export default function usePrompts() {
   return {
     prompts,
     addPrompt,
+    updatePrompt,
     deletePrompt,
     toggleFavorite,
     replacePrompts,
