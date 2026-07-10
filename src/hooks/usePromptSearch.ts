@@ -23,7 +23,7 @@ export default function usePromptSearch({
 
       const matchProvider =
         provider === "all" ||
-        prompt.provider === provider;
+        prompt.platform === provider;
 
       return matchKeyword && matchProvider;
     });

@@ -9,7 +9,8 @@ export default function usePrompts() {
 
   const addPrompt = (
     content: string,
-    provider: string
+    platform: string,
+    model: string
   ) => {
     if (!content.trim()) return;
 
@@ -19,7 +20,8 @@ export default function usePrompts() {
       id: crypto.randomUUID(),
       title: "AIHub",
       content,
-      provider,
+      platform,
+      model,
       tags: [],
       favorite: false,
       createdAt: now,
@@ -31,7 +33,7 @@ export default function usePrompts() {
 
   const updatePrompt = (
     id: string,
-    updates: Pick<Prompt, "content" | "provider">
+    updates: Pick<Prompt, "content" | "platform" | "model">
   ) => {
     setPrompts((prev) =>
       prev.map((prompt) =>

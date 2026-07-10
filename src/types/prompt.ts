@@ -1,17 +1,19 @@
-export type AIProvider =
-  | "chatgpt"
-  | "claude"
-  | "gemini"
-  | "clawx"
-  | "all";
-
-export interface Prompt {
+export type Prompt = {
   id: string;
+
   title: string;
+
   content: string;
-  provider: AIProvider;
+
+  platform: string;
+
+  model: string;
+
   tags: string[];
+
   favorite: boolean;
+
   createdAt: string;
+
   updatedAt: string;
-}
+};

@@ -9,7 +9,8 @@ type PromptCardProps = {
   onUpdate: (
     id: string,
     content: string,
-    provider: string
+    platform: string,
+    model: string
   ) => void;
 };
 
@@ -26,7 +27,13 @@ export default function PromptCard({
   const save = () => {
     if (!content.trim()) return;
 
-    onUpdate(prompt.id, content, prompt.provider);
+    onUpdate(
+      prompt.id,
+      content,
+      prompt.platform,
+      prompt.model
+    );
+
     setEditing(false);
   };
 

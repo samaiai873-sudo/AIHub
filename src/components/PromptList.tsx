@@ -9,7 +9,8 @@ type PromptListProps = {
   onUpdate: (
     id: string,
     content: string,
-    provider: string
+    platform: string,
+    model: string
   ) => void;
 };
 

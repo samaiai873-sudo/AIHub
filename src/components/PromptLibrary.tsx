@@ -5,6 +5,7 @@ import PromptList from "./PromptList";
 import EmptyState from "./EmptyState";
 import SearchBar from "./SearchBar";
 import PromptToolbar from "./PromptToolbar";
+import DashboardStats from "./DashboardStats";
 
 import usePrompts from "../hooks/usePrompts";
 import usePromptSearch from "../hooks/usePromptSearch";
@@ -39,8 +40,29 @@ export default function PromptLibrary() {
     provider: filterProvider,
   });
 
+  const total = prompts.length;
+
+  const favorites = prompts.filter(
+    (prompt) => prompt.favorite
+  ).length;
+
+  const providerCount = new Set(
+  prompts.map((prompt) => prompt.platform)
+).size;
+
+  const currentFilter =
+    filterProvider === "all"
+      ? "All"
+      : providers.find(
+          (item) => item.id === filterProvider
+        )?.name ?? filterProvider;
+
   const handleAddPrompt = () => {
-    addPrompt(input, provider);
+   addPrompt(
+  input,
+  provider,
+  "gpt-5"
+);
     setInput("");
   };
 
@@ -94,7 +116,11 @@ export default function PromptLibrary() {
           marginBottom: 20,
         }}
       >
-        <h2 style={{ margin: 0 }}>
+        <h2
+          style={{
+            margin: 0,
+          }}
+        >
           📂 Prompt Library
         </h2>
 
@@ -104,11 +130,20 @@ export default function PromptLibrary() {
         />
       </div>
 
+      <DashboardStats
+        total={total}
+        favorites={favorites}
+        providers={providerCount}
+        currentFilter={currentFilter}
+      />
+
       <input
         ref={fileInputRef}
         type="file"
         accept=".json"
-        style={{ display: "none" }}
+        style={{
+          display: "none",
+        }}
         onChange={handleImport}
       />
 
@@ -130,7 +165,9 @@ export default function PromptLibrary() {
             borderRadius: 8,
           }}
         >
-          <option value="all">All</option>
+          <option value="all">
+            All
+          </option>
 
           {providers.map((item) => (
             <option
@@ -170,12 +207,18 @@ export default function PromptLibrary() {
           onCopy={copyPrompt}
           onDelete={deletePrompt}
           onToggleFavorite={toggleFavorite}
-          onUpdate={(id, content, provider) =>
-            updatePrompt(id, {
-              content,
-              provider,
-            })
-          }
+          onUpdate={(
+  id,
+  content,
+  platform,
+  model
+) =>
+  updatePrompt(id, {
+    content,
+    platform,
+    model,
+  })
+}
         />
       )}
     </div>
