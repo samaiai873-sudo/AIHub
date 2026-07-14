@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import useAppSettings from "../hooks/useAppSettings";
 import useApiKeys from "../hooks/useApiKeys";
@@ -19,11 +19,16 @@ import { getDefaultModel } from "../constants/models";
 import ConversationSidebar from "./ConversationSidebar";
 import MessageList from "./MessageList";
 import Composer from "./Composer";
+import CompareView from "./CompareView";
 
 export default function ConversationWorkspace() {
   const [showExportMenu, setShowExportMenu] =
     useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  // Sprint 10: Compare Responses
+  const [showCompareView, setShowCompareView] = useState(false);
+  const [comparePrompt, setComparePrompt] = useState("");
+  const [compareModels, setCompareModels] = useState<{ platform: string; model: string }[]>([]);
   const {
     conversations,
     currentConversation,
@@ -44,10 +49,24 @@ export default function ConversationWorkspace() {
   const { settings, setLastUsedPlatform } = useAppSettings();
   const { apiKeys } = useApiKeys();
 
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(null), 2500);
-  };
+  }, []);
+
+  const handleComparePickWinner = useCallback((platform: string, model: string, content: string) => {
+    // 將選中的回覆加入當前對話
+    if (currentConversation) {
+      addMessage(currentConversation.id, {
+        role: "assistant",
+        platform,
+        model,
+        content,
+      });
+      setShowCompareView(false);
+      showToast(`✅ 已採用 ${platform} (${model}) 的回覆`);
+    }
+  }, [currentConversation, addMessage, showToast]);
 
   const handleNewConversation = () => {
     // Sprint 8：記住最後使用的 AI Platform，新 Conversation 直接沿用
@@ -236,6 +255,39 @@ export default function ConversationWorkspace() {
                 gap: 10,
               }}
             >
+              {/* Compare Button */}
+              <button
+                onClick={() => {
+                  // 開啟 Compare View，預設比較當前對話平台 + 另外兩個平台
+                  const currentPlatform = currentConversation.platform;
+                  const currentModel = currentConversation.model;
+                  const otherPlatforms = aiPlatforms
+                    .filter((p) => p.id !== currentPlatform)
+                    .slice(0, 2); // 取前兩個其他平台
+                  setComparePrompt(""); // 空 prompt 讓使用者輸入，或可預填最後一條 user message
+                  setCompareModels([
+                    { platform: currentPlatform, model: currentModel },
+                    ...otherPlatforms.map((p) => ({
+                      platform: p.id,
+                      model: p.models[0]?.id || "",
+                    })),
+                  ]);
+                  setShowCompareView(true);
+                }}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2b2b2b",
+                  color: "#2d7ef7",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                📊 Compare
+              </button>
+
               <select
                 value={currentConversation.platform}
                 onChange={(event) => {
@@ -467,6 +519,16 @@ export default function ConversationWorkspace() {
           >
             {toast}
           </div>
+        )}
+
+        {/* Compare View Modal */}
+        {showCompareView && (
+          <CompareView
+            prompt={comparePrompt}
+            selectedModels={compareModels}
+            onClose={() => setShowCompareView(false)}
+            onPickWinner={handleComparePickWinner}
+          />
         )}
       </div>
     </div>
