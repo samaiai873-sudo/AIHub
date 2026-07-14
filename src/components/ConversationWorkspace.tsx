@@ -12,6 +12,7 @@ import {
   downloadFile,
   generateConversationFilename,
 } from "../utils/conversationExport";
+import { isPlatform, type Platform } from "../constants/platforms";
 
 import ConversationSidebar from "./ConversationSidebar";
 import MessageList from "./MessageList";
@@ -54,14 +55,15 @@ export default function ConversationWorkspace() {
     );
   };
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, platform?: string, model?: string) => {
     if (!currentConversation) return;
 
-    const platform = currentConversation.platform;
-    const model = currentConversation.model;
-    const selectedApiKey = apiKeys[platform];
+    // 優先使用 Composer 選擇的 platform/model，否則 fallback 到對話預設值
+    const targetPlatform = isPlatform(platform || "") ? platform! : currentConversation.platform;
+    const targetModel = model || currentConversation.model;
+    const selectedApiKey = apiKeys[targetPlatform];
 
-    setLastUsedPlatform(platform);
+    setLastUsedPlatform(targetPlatform as Platform);
 
     addMessage(currentConversation.id, {
       role: "user",
@@ -73,13 +75,13 @@ export default function ConversationWorkspace() {
     // 分支 2：Provider 未設定 API Key → 新增一則 System Message，不嘗試打 API
     if (!selectedApiKey) {
       const platformLabel =
-        aiPlatforms.find((item) => item.id === platform)?.name ?? platform;
-      const isGemini = platform === "gemini";
+        aiPlatforms.find((item) => item.id === targetPlatform)?.name ?? targetPlatform;
+      const isGemini = targetPlatform === "gemini";
 
       addMessage(currentConversation.id, {
         role: "system",
-        platform,
-        model,
+        platform: targetPlatform,
+        model: targetModel,
         content: [
           `${platformLabel} 尚未設定 API Key，沒辦法直接在這裡顯示回覆。`,
           "",
@@ -99,14 +101,14 @@ export default function ConversationWorkspace() {
     // 成功 → 更新成 assistant 訊息；失敗 → 更新成 error 訊息。
     const assistantMessageId = addMessage(currentConversation.id, {
       role: "assistant",
-      platform,
-      model,
+      platform: targetPlatform,
+      model: targetModel,
       content: "",
     });
 
     const reply = await generateAssistantReply({
-      platform,
-      model,
+      platform: targetPlatform,
+      model: targetModel,
       prompt: content,
       apiKey: selectedApiKey,
       onChunk: (chunk) => {
@@ -415,6 +417,8 @@ export default function ConversationWorkspace() {
             onSend={handleSend}
             onOpenInBrowser={handleOpenInBrowser}
             isFreeMode={!apiKeys[currentConversation.platform]}
+            defaultPlatform={currentConversation.platform}
+            defaultModel={currentConversation.model}
           />
         ) : (
           <div
