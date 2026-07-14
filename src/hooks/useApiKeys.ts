@@ -2,12 +2,10 @@ import useLocalStorage from "./useLocalStorage";
 
 export type ApiKeys = Record<string, string>;
 
-const defaultApiKeys: ApiKeys = {};
-
 export default function useApiKeys() {
   const [apiKeys, setApiKeys] = useLocalStorage<ApiKeys>(
     "aihub-api-keys",
-    defaultApiKeys
+    {}
   );
 
   const updateApiKey = (provider: string, value: string) => {
