@@ -33,10 +33,11 @@ export default function MessageList({
         padding: 20,
       }}
     >
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <MessageBubble
           key={message.id}
           message={message}
+          messageIndex={index}
         />
       ))}
     </div>

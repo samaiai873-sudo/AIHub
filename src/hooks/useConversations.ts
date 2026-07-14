@@ -11,6 +11,7 @@ import type {
   Conversation,
   Message,
 } from "../types/conversation";
+import { generateAssistantReply } from "../providers";
 
 // Options 型別定義（支援 Template、Prompt Library 等未來功能）
 export type CreateConversationOptions = {
@@ -22,7 +23,7 @@ export type CreateConversationOptions = {
 
 function buildConversationTitle(content: string) {
   const normalizedContent = content
-    .replace(/\s+/g, " ")
+    .replace(/\\s+/g, " ")
     .trim();
 
   if (!normalizedContent) {
@@ -347,6 +348,156 @@ export default function useConversations() {
     );
   };
 
+  // Sprint 9: Reply with... — 以新模型重新生成指定訊息的回覆
+  // messageIndex: 要重新生成的 assistant message 在 messages 陣列中的索引
+  const regenerateWith = async (
+    conversationId: string,
+    messageIndex: number,
+    newPlatform: string,
+    newModel: string
+  ) => {
+    const conversation = normalizedConversations.find(
+      (c) => c.id === conversationId
+    );
+    if (!conversation) return;
+
+    const messages = conversation.messages;
+    if (messageIndex < 0 || messageIndex >= messages.length) return;
+
+    const targetMessage = messages[messageIndex];
+    if (targetMessage.role !== "assistant") return;
+
+    // 找到這輪對話的 user prompt（通常是前一則訊息）
+    const userMessageIndex = messageIndex - 1;
+    if (userMessageIndex < 0) return;
+    const userMessage = messages[userMessageIndex];
+    if (userMessage.role !== "user") return;
+
+    const prompt = userMessage.content;
+    const validatedPlatform = isPlatform(newPlatform)
+      ? newPlatform
+      : DEFAULT_PLATFORM;
+    const finalModel = newModel ?? getDefaultModel(validatedPlatform);
+
+    // 標記正在重新生成
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv.id !== conversationId) {
+          return normalizeConversation(conv);
+        }
+        return normalizeConversation({
+          ...conv,
+          updatedAt: new Date().toISOString(),
+          messages: conv.messages.map((msg, idx) =>
+            idx === messageIndex
+              ? {
+                  ...msg,
+                  regenerating: true,
+                  originalModel: msg.model,
+                  model: finalModel,
+                  platform: validatedPlatform,
+                }
+              : msg
+          ),
+        });
+      })
+    );
+
+    // 取得 API Key
+    const apiKeys = JSON.parse(
+      localStorage.getItem("aihub-api-keys") ?? "{}"
+    );
+    const apiKey = apiKeys[validatedPlatform];
+
+    if (!apiKey) {
+      // 沒有 API Key，標記錯誤
+      setConversations((prev) =>
+        prev.map((conv) => {
+          if (conv.id !== conversationId) {
+            return normalizeConversation(conv);
+          }
+          return normalizeConversation({
+            ...conv,
+            messages: conv.messages.map((msg, idx) =>
+              idx === messageIndex
+                ? {
+                    ...msg,
+                    regenerating: false,
+                    role: "error",
+                    content:
+                      `⚠️ ${validatedPlatform} 尚未設定 API Key，無法重新生成。請至 Settings 設定後重試。`,
+                  }
+                : msg
+            ),
+          });
+        })
+      );
+      return;
+    }
+
+    try {
+      // 呼叫新 Provider 產生回覆
+      const reply = await generateAssistantReply({
+        platform: validatedPlatform,
+        model: finalModel,
+        prompt,
+        apiKey,
+      });
+
+      // 更新訊息內容
+      setConversations((prev) =>
+        prev.map((conv) => {
+          if (conv.id !== conversationId) {
+            return normalizeConversation(conv);
+          }
+          return normalizeConversation({
+            ...conv,
+            updatedAt: new Date().toISOString(),
+            messages: conv.messages.map((msg, idx) =>
+              idx === messageIndex
+                ? {
+                    ...msg,
+                    regenerating: false,
+                    content: reply.content,
+                    model: reply.model,
+                    platform: reply.provider,
+                    role: reply.usedFallback ? "error" : "assistant",
+                  }
+                : msg
+            ),
+          });
+        })
+      );
+    } catch (error) {
+      // 發生錯誤，恢復原狀並顯示錯誤
+      const message = error instanceof Error ? error.message : "未知錯誤";
+      setConversations((prev) =>
+        prev.map((conv) => {
+          if (conv.id !== conversationId) {
+            return normalizeConversation(conv);
+          }
+          return normalizeConversation({
+            ...conv,
+            messages: conv.messages.map((msg, idx) =>
+              idx === messageIndex
+                ? {
+                    ...msg,
+                    regenerating: false,
+                    role: "error",
+                    content: `⚠️ 重新生成失敗：${message}`,
+                    model: msg.originalModel ?? msg.model,
+                    platform: msg.originalModel
+                      ? validatedPlatform
+                      : msg.platform,
+                  }
+                : msg
+            ),
+          });
+        })
+      );
+    }
+  };
+
   const currentConversation =
     normalizedConversations.find(
       (conversation) =>
@@ -369,5 +520,6 @@ export default function useConversations() {
     selectConversation,
     renameProject,
     deleteProject,
+    regenerateWith,
   };
 }

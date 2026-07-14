@@ -13,6 +13,12 @@ export type Message = {
   content: string;
 
   createdAt: string;
+
+  // Sprint 9: Reply with... — 正在重新生成時標記，用於 UI 顯示 loading 狀態
+  regenerating?: boolean;
+
+  // Sprint 9: Reply with... — 記錄原始模型，方便復原或顯示
+  originalModel?: string;
 };
 
 export type Conversation = {
