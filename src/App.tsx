@@ -6,6 +6,7 @@ import PromptLibrary from "./components/PromptLibrary";
 import ConversationWorkspace from "./components/ConversationWorkspace";
 import GlobalSearch from "./components/GlobalSearch";
 import ResetAllData from "./components/ResetAllData";
+import FirstTimeSetup from "./components/FirstTimeSetup";
 import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
 import { useConversationContext } from "./context/ConversationContext";
@@ -17,6 +18,7 @@ export default function App() {
   >("conversation");
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(true);
 
   const { conversations } = useConversationContext();
   const { prompts } = usePrompts();
@@ -24,6 +26,10 @@ export default function App() {
   const { settings, updateSettings } = useAppSettings();
   const { apiKeys, updateApiKey, removeApiKey } = useApiKeys();
   const { createConversation } = useConversationContext();
+
+  const handleFirstTimeSetupComplete = () => {
+    setShowFirstTimeSetup(false);
+  };
 
   // Global Search keyboard shortcut (Cmd/Ctrl + K)
   useEffect(() => {
@@ -275,6 +281,10 @@ export default function App() {
           onSelect={handleGlobalSearchSelect}
           onClose={() => setShowGlobalSearch(false)}
         />
+      )}
+
+      {showFirstTimeSetup && (
+        <FirstTimeSetup onComplete={handleFirstTimeSetupComplete} />
       )}
     </div>
   );

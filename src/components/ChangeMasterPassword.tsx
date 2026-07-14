@@ -13,6 +13,27 @@ export default function ChangeMasterPassword() {
 
   const hasApiKeys = Object.keys(apiKeys).length > 0;
 
+  // Password strength calculation
+  const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
+    if (!password) return { score: 0, label: "", color: "#555" };
+    
+    let score = 0;
+    // Length check
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+    // Character variety
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+    
+    if (score <= 2) return { score, label: "弱", color: "#c62828" };
+    if (score <= 4) return { score, label: "中等", color: "#f57c00" };
+    return { score, label: "強", color: "#2e7d32" };
+  };
+
+  const newPasswordStrength = getPasswordStrength(newPassword);
+
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("idle");
@@ -139,6 +160,25 @@ export default function ChangeMasterPassword() {
           autoComplete="new-password"
           minLength={8}
         />
+        {/* Password Strength Indicator */}
+        {newPassword && (
+          <div style={{ marginTop: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 12 }}>
+              <span>密碼強度: {newPasswordStrength.label}</span>
+              <span style={{ color: newPasswordStrength.color }}>{newPasswordStrength.score}/5</span>
+            </div>
+            <div style={{ height: 6, background: "#333", borderRadius: 3, overflow: "hidden" }}>
+              <div
+                style={{
+                  width: `${(newPasswordStrength.score / 5) * 100}%`,
+                  height: "100%",
+                  background: newPasswordStrength.color,
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
