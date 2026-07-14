@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar";
 import PromptLibrary from "./components/PromptLibrary";
 import ConversationWorkspace from "./components/ConversationWorkspace";
 import GlobalSearch from "./components/GlobalSearch";
+import ChangeMasterPassword from "./components/ChangeMasterPassword";
 import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
 import { useConversationContext } from "./context/ConversationContext";
@@ -245,6 +246,23 @@ export default function App() {
                   </button>
                 </div>
               ))}
+
+              {/* Change Master Password Section */}
+              <div
+                style={{
+                  marginTop: 24,
+                  paddingTop: 16,
+                  borderTop: "1px solid #333",
+                }}
+              >
+                <h4 style={{ marginTop: 0, marginBottom: 12 }}>
+                  🔑 修改主密碼 (Master Password)
+                </h4>
+                <p style={{ color: "#c2c2c2", marginTop: 0, marginBottom: 16, fontSize: 13 }}>
+                  主密碼用於加密所有 API Key。修改後將重新加密所有已存儲的 API Key。
+                </p>
+                <ChangeMasterPassword />
+              </div>
             </div>
           </div>
         )}
