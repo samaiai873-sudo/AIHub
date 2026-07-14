@@ -13,28 +13,43 @@ export default function useAgents() {
       DEFAULT_AGENTS
     );
 
+  const [selectedAgent, setSelectedAgent] =
+    useLocalStorage<string | null>(
+      "aihub-selected-agent",
+      DEFAULT_AGENTS[0] ?? null
+    );
+
   const isEnabled = (platform: string) => {
     return enabledAgents.includes(platform);
   };
 
   const toggleAgent = (platform: string) => {
     setEnabledAgents((prev) => {
-      if (prev.includes(platform)) {
-        return prev.filter(
-          (item) => item !== platform
-        );
+      const next = prev.includes(platform)
+        ? prev.filter((item) => item !== platform)
+        : [...prev, platform];
+
+      if (selectedAgent === platform && !next.includes(platform)) {
+        setSelectedAgent(next[0] ?? null);
       }
 
-      return [...prev, platform];
+      return next;
     });
   };
 
   const enableAll = () => {
     setEnabledAgents(DEFAULT_AGENTS);
+    setSelectedAgent(
+      selectedAgent && DEFAULT_AGENTS.includes(selectedAgent)
+        ? selectedAgent
+        : DEFAULT_AGENTS[0] ?? null
+    );
   };
 
   return {
     enabledAgents,
+    selectedAgent,
+    setSelectedAgent,
     isEnabled,
     toggleAgent,
     enableAll,

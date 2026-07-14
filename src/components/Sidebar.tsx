@@ -1,14 +1,18 @@
 import { aiPlatforms } from "../data/aiPlatforms";
-import { useAgentContext } from "../context/AgentContext";
 
 type SidebarProps = {
+  activePage: "conversation" | "prompt" | "settings";
+  onOpenConversation: (platform?: string, model?: string) => void;
   onOpenPrompt: () => void;
+  onOpenSettings: () => void;
 };
 
 export default function Sidebar({
+  activePage,
+  onOpenConversation,
   onOpenPrompt,
+  onOpenSettings,
 }: SidebarProps) {
-  const { enabledAgents } = useAgentContext();
 
   return (
     <aside
@@ -43,29 +47,38 @@ export default function Sidebar({
         🤖 AI Agents
       </div>
 
-      {aiPlatforms.map((platform) => {
-        const enabled = enabledAgents.includes(platform.id);
-
-        return (
-          <button
-            key={platform.id}
-            style={{
-              padding: 14,
-              marginBottom: 10,
-              borderRadius: 8,
-              border: "none",
-              textAlign: "left",
-              cursor: enabled ? "pointer" : "default",
-              background: enabled ? "#f2f2f2" : "#2b2b2b",
-              color: enabled ? "#000" : "#777",
-              opacity: enabled ? 1 : 0.55,
-            }}
-          >
-            {enabled ? "🟢" : "⚪"}{" "}
-            {platform.icon} {platform.name}
-          </button>
-        );
-      })}
+      {aiPlatforms.map((platform) => (
+        <button
+          key={platform.id}
+          onClick={() => {
+            onOpenConversation(
+              platform.id,
+              platform.models[0]?.id ?? "default"
+            );
+          }}
+          style={{
+            display: "block",
+            width: "100%",
+            padding: 14,
+            marginBottom: 10,
+            borderRadius: 8,
+            border: "none",
+            textAlign: "left",
+            cursor: "pointer",
+            background: "#2b2b2b",
+            color: "white",
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#3a3a3a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#2b2b2b";
+          }}
+        >
+          {platform.icon} {platform.name}
+        </button>
+      ))}
 
       <hr
         style={{
@@ -76,6 +89,7 @@ export default function Sidebar({
       />
 
       <button
+        onClick={() => onOpenConversation()}
         style={{
           padding: 14,
           marginBottom: 10,
@@ -83,6 +97,11 @@ export default function Sidebar({
           border: "none",
           textAlign: "left",
           cursor: "pointer",
+          background:
+            activePage === "conversation"
+              ? "#2d7ef7"
+              : "#2b2b2b",
+          color: "white",
         }}
       >
         💬 Conversations
@@ -97,18 +116,29 @@ export default function Sidebar({
           border: "none",
           textAlign: "left",
           cursor: "pointer",
+          background:
+            activePage === "prompt"
+              ? "#2d7ef7"
+              : "#2b2b2b",
+          color: "white",
         }}
       >
         📂 Prompt Library
       </button>
 
       <button
+        onClick={onOpenSettings}
         style={{
           padding: 14,
           borderRadius: 8,
           border: "none",
           textAlign: "left",
           cursor: "pointer",
+          background:
+            activePage === "settings"
+              ? "#2d7ef7"
+              : "#2b2b2b",
+          color: "white",
         }}
       >
         ⚙️ Settings
