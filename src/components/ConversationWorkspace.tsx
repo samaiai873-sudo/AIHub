@@ -13,6 +13,8 @@ import {
   generateConversationFilename,
 } from "../utils/conversationExport";
 import { isPlatform, type Platform } from "../constants/platforms";
+import { matchRoutingRule, stripRoutingPrefix } from "../constants/routing";
+import { getDefaultModel } from "../constants/models";
 
 import ConversationSidebar from "./ConversationSidebar";
 import MessageList from "./MessageList";
@@ -58,12 +60,26 @@ export default function ConversationWorkspace() {
   const handleSend = async (content: string, platform?: string, model?: string) => {
     if (!currentConversation) return;
 
-    // 優先使用 Composer 選擇的 platform/model，否則 fallback 到對話預設值
-    const targetPlatform = isPlatform(platform || "") ? platform! : currentConversation.platform;
-    const targetModel = model || currentConversation.model;
-    const selectedApiKey = apiKeys[targetPlatform];
+    // Sprint 9: Conversation Routing — 優先匹配路由規則，可覆蓋 Composer 選擇與對話預設值
+    const routingRule = matchRoutingRule(content, settings.routingRules);
+    let targetPlatform: Platform;
+    let targetModel: string;
 
-    setLastUsedPlatform(targetPlatform as Platform);
+    if (routingRule) {
+      // 路由規則命中：使用規則指定的平台/模型，並移除前綴
+      targetPlatform = routingRule.targetPlatform;
+      targetModel = routingRule.targetModel ?? getDefaultModel(targetPlatform);
+      content = stripRoutingPrefix(content, routingRule);
+      setLastUsedPlatform(targetPlatform);
+    } else {
+      // 無路由規則：優先使用 Composer 選擇的 platform/model，否則 fallback 到對話預設值
+      const platformParam = platform || "";
+      targetPlatform = isPlatform(platformParam) ? platformParam : currentConversation.platform;
+      targetModel = model || currentConversation.model;
+      setLastUsedPlatform(targetPlatform);
+    }
+
+    const selectedApiKey = apiKeys[targetPlatform];
 
     addMessage(currentConversation.id, {
       role: "user",
