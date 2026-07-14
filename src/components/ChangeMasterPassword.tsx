@@ -137,6 +137,9 @@ export default function ChangeMasterPassword() {
           }}
           autoComplete="current-password"
         />
+        <p style={{ margin: "6px 0 0", fontSize: 12, color: "#888" }}>
+          忘記主密碼？請至 Settings 頁面底部使用「重置所有資料」功能（將永久刪除所有資料）。
+        </p>
       </div>
 
       <div>
