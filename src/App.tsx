@@ -5,7 +5,7 @@ import Sidebar from "./components/Sidebar";
 import PromptLibrary from "./components/PromptLibrary";
 import ConversationWorkspace from "./components/ConversationWorkspace";
 import GlobalSearch from "./components/GlobalSearch";
-import ChangeMasterPassword from "./components/ChangeMasterPassword";
+import ResetAllData from "./components/ResetAllData";
 import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
 import { useConversationContext } from "./context/ConversationContext";
@@ -247,7 +247,7 @@ export default function App() {
                 </div>
               ))}
 
-              {/* Change Master Password Section */}
+              {/* Reset All Data Section */}
               <div
                 style={{
                   marginTop: 24,
@@ -256,12 +256,12 @@ export default function App() {
                 }}
               >
                 <h4 style={{ marginTop: 0, marginBottom: 12 }}>
-                  🔑 修改主密碼 (Master Password)
+                  🗑️ 重置所有資料
                 </h4>
                 <p style={{ color: "#c2c2c2", marginTop: 0, marginBottom: 16, fontSize: 13 }}>
-                  主密碼用於加密所有 API Key。修改後將重新加密所有已存儲的 API Key。
+                  永久刪除所有 API Keys、對話記錄、Prompt Library 等所有資料。此操作不可復原。
                 </p>
-                <ChangeMasterPassword />
+                <ResetAllData />
               </div>
             </div>
           </div>
