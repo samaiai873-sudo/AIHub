@@ -1,0 +1,21 @@
+{
+  "name": "aihub-native-host",
+  "version": "1.0.0",
+  "description": "AIHub Native Messaging Host for MCP STDIO Transport",
+  "main": "aihub_native_host.py",
+  "scripts": {
+    "install": "python3 install.py",
+    "uninstall": "python3 install.py uninstall",
+    "test": "python3 aihub_native_host.py"
+  },
+  "keywords": [
+    "aihub",
+    "mcp",
+    "native-messaging",
+    "chrome-extension"
+  ],
+  "author": "AIHub Team",
+  "license": "MIT",
+  "os": ["darwin", "linux", "win32"],
+  "python": ">=3.8"
+}

@@ -141,6 +141,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       callMCPTool(message.serverId, message.toolName, message.args)
         .then(sendResponse);
       return true; // async response
+
+    case "MCP_START_STDIO":
+      startStdioMCPServer(message.serverId, message.config)
+        .then(sendResponse);
+      return true; // async response
+
+    case "MCP_STOP_STDIO":
+      stopStdioMCPServer(message.serverId)
+        .then(sendResponse);
+      return true; // async response
+
+    case "MCP_STDIO_REQUEST":
+      sendStdioMCPRequest(message.serverId, message.request)
+        .then(sendResponse);
+      return true; // async response
   }
   
   return true; // keep channel open for async responses
@@ -198,4 +213,131 @@ async function testMCPConnection(server) {
       error: error instanceof Error ? error.message : String(error) 
     };
   }
+}
+
+// STDIO Native Messaging Host management
+const NATIVE_HOST_NAME = "com.aihub.native";
+let stdioPort = null;
+const stdioServers = new Map(); // serverId -> { config, tools }
+
+async function connectStdioHost() {
+  if (stdioPort) return stdioPort;
+  
+  try {
+    stdioPort = chrome.runtime.connectNative(NATIVE_HOST_NAME);
+    
+    stdioPort.onMessage.addListener((message) => {
+      if (message.type === "mcp_notification") {
+        // Forward notification to side panel
+        chrome.runtime.sendMessage({
+          type: "MCP_NOTIFICATION",
+          serverId: message.server_id,
+          data: message.data
+        });
+      } else if (message.type === "mcp_server_stopped") {
+        // Server process ended
+        stdioServers.delete(message.server_id);
+        chrome.runtime.sendMessage({
+          type: "MCP_SERVER_STOPPED",
+          serverId: message.server_id
+        });
+      } else if (message.type === "mcp_server_log") {
+        // Server log output
+        chrome.runtime.sendMessage({
+          type: "MCP_SERVER_LOG",
+          serverId: message.server_id,
+          level: message.level,
+          message: message.message
+        });
+      }
+    });
+    
+    stdioPort.onDisconnect.addListener(() => {
+      stdioPort = null;
+      console.log("Native messaging host disconnected");
+    });
+    
+    return stdioPort;
+  } catch (error) {
+    console.error("Failed to connect to native host:", error);
+    throw new Error(`無法連線到 Native Messaging Host: ${error.message}`);
+  }
+}
+
+async function startStdioMCPServer(serverId, config) {
+  const port = await connectStdioHost();
+  
+  return new Promise((resolve) => {
+    const requestId = Date.now().toString();
+    
+    const handleResponse = (response) => {
+      if (response.id === requestId) {
+        chrome.runtime.onMessage.removeListener(listener);
+        resolve(response.data);
+      }
+    };
+    
+    const listener = (message, sender, sendResponse) => {
+      if (message.type === "response" && message.id === requestId) {
+        handleResponse(message);
+      }
+    };
+    
+    chrome.runtime.onMessage.addListener(listener);
+    
+    port.postMessage({
+      id: requestId,
+      type: "mcp_start",
+      server_id: serverId,
+      config: config
+    });
+  });
+}
+
+async function stopStdioMCPServer(serverId) {
+  const port = await connectStdioHost();
+  
+  return new Promise((resolve) => {
+    const requestId = Date.now().toString();
+    
+    const listener = (message, sender, sendResponse) => {
+      if (message.type === "response" && message.id === requestId) {
+        chrome.runtime.onMessage.removeListener(listener);
+        stdioServers.delete(serverId);
+        resolve(message.data);
+      }
+    };
+    
+    chrome.runtime.onMessage.addListener(listener);
+    
+    port.postMessage({
+      id: requestId,
+      type: "mcp_stop",
+      server_id: serverId
+    });
+  });
+}
+
+async function sendStdioMCPRequest(serverId, request) {
+  const port = await connectStdioHost();
+  
+  return new Promise((resolve) => {
+    const requestId = Date.now().toString();
+    
+    const listener = (message, sender, sendResponse) => {
+      if (message.type === "response" && message.id === requestId) {
+        chrome.runtime.onMessage.removeListener(listener);
+        resolve(message.data);
+      }
+    };
+    
+    chrome.runtime.onMessage.addListener(listener);
+    
+    port.postMessage({
+      id: requestId,
+      type: "mcp_request",
+      server_id: serverId,
+      request: request
+    });
+  });
 }

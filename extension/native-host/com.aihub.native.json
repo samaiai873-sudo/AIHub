@@ -1,0 +1,9 @@
+{
+  "name": "com.aihub.native",
+  "description": "AIHub Native Messaging Host for MCP STDIO Transport",
+  "path": "aihub_native_host.py",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://<YOUR_EXTENSION_ID>/"
+  ]
+}
