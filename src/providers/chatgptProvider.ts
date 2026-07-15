@@ -49,8 +49,7 @@ export const chatgptProvider: AIProvider = {
           messages: [
             {
               role: "system",
-              content:
-                "You are a helpful assistant inside AIHub. Answer briefly and clearly.",
+              content: "You are a helpful assistant inside AIHub. Answer briefly and clearly.",
             },
             { role: "user", content: prompt },
           ],
