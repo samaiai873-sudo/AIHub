@@ -2,31 +2,135 @@
 
 ## Sprint 7A
 
--   Conversation CRUD
--   Search planning
--   Context menu planned
+- Conversation CRUD
+- Search planning
+- Context menu planned
 
 ## Sprint 7（完成）
 
--   Conversation CRUD
--   Context Menu
--   Favorite
--   Project
--   Export
--   Conversation Search v2（Title、Content、Platform、Project、Favorite）
--   `createConversation(options)` + `createConversationByPlatform()`
+- Conversation CRUD
+- Context Menu
+- Favorite
+- Project
+- Export
+- Conversation Search v2（Title、Content、Platform、Project、Favorite）
+- `createConversation(options)` + `createConversationByPlatform()`
 
 ## Sprint 8（完成 ✅）
 
--   AI Provider 完整抽象（`AIProvider` 介面、Registry Pattern）
--   API 串接完成：ChatGPT、Claude、Gemini 三大 Provider
--   Streaming 實作：全部支援即時串流回應（SSE / JSON Lines）
--   Vite Dev Proxy 解決 CORS（ChatGPT `/api/openai/*`）
--   Anthropic `anthropic-dangerous-direct-browser-access` 直連
--   Gemini `streamGenerateContent` 端點支援
--   Model Map 校驗：對照官方文件更新為正式版本名稱
+- AI Provider 完整抽象（`AIProvider` 介面、Registry Pattern）
+- API 串接完成：ChatGPT、Claude、Gemini 三大 Provider
+- Streaming 實作：全部支援即時串流回應（SSE / JSON Lines）
+- Vite Dev Proxy 解決 CORS（ChatGPT `/api/openai/*`）
+- Anthropic `anthropic-dangerous-direct-browser-access` 直連
+- Gemini `streamGenerateContent` 端點支援
+- Model Map 校驗：對照官方文件更新為正式版本名稱
   - OpenAI: `gpt-4o` / `gpt-4o-mini` / `gpt-4-turbo`
   - Anthropic: `claude-3-5-sonnet-20241022` / `claude-3-5-haiku-20241022` / `claude-3-opus-20240229`
   - Google: `gemini-1.5-pro` / `gemini-1.5-flash` / `gemini-1.0-pro`
--   Browser Workflow 優化
--   Project 管理完善
+- Browser Workflow 優化
+- Project 管理完善
+
+## Sprint 9（完成 ✅） - v0.9.0
+
+### Reply with... (換模型重答)
+- `Message` 型別新增 `regenerating?`, `originalModel?`
+- `useConversations` 新增 `regenerateWith(conversationId, messageIndex, platform, model)`
+- 樂觀更新 + 串流 + 錯誤回滾
+- `MessageBubble` 新增「Reply with…」下拉選單（ChatGPT/Claude/Gemini）
+- 再生成時顯示 spinner
+
+### Multi-AI Conversation (單一 Thread 多模型)
+- `Composer` 新增模型選擇器（per platform）
+- `onSend(content, platform, model)` 簽名變更
+- `ConversationWorkspace.handleSend` 接受可選 platform/model
+- 優先序：Routing > Composer 手動選擇 > 對話預設模型
+
+### Conversation Routing (關鍵字自動導向)
+- `RoutingRule` 型別：`prefix` / `keyword` / `regex`
+- 9 預設規則：`@claude`、`@gpt`、`@gemini`、`/code`、`/write`、`/search` 等
+- `matchRoutingRule()` / `stripRoutingPrefix()`
+- `useAppSettings` 新增 `routingRules` 狀態 + CRUD（啟用/停用/優先序）
+- 規則匹配：啟用規則按 `priority` 降冪排序，首次匹配勝出
+
+---
+
+## Sprint 10（完成 ✅） - v0.9.5
+
+### Compare View (多模型並排對比)
+- 新組件 `CompareView.tsx`：多模型並行比較網格
+- 每模型獨立串流、`Pick Winner` 動作
+- Loading pulse 動畫 (`@keyframes pulse`)
+- `ConversationWorkspace` 整合：Compare 按鈕、狀態管理
+- 復用既有 `generateAssistantReply()`，無新增 Provider 邏輯
+
+---
+
+## Sprint 11（完成 ✅） - v0.9.8
+
+### Settings & Encryption System
+- `secureStorage.ts`：AES-GCM (256-bit) + PBKDF2 (SHA-256, 100k iterations) - **後來在 v1.0.0 改為 Web Crypto 隨機金鑰**
+- `useSecureLocalStorage.ts`：非同步加密儲存 Hook，含 `isLoaded` 狀態
+- `useApiKeys.ts`：遷移至 `useSecureLocalStorage`，新增 `reEncryptApiKeys`
+- `ChangeMasterPassword.tsx`：舊密碼驗證、新密碼強度計量器 (0-6 分)、視覺化進度條、確認密碼
+- `ResetAllData.tsx`：「RESET ALL DATA」確認輸入 + `window.confirm` 雙重確認
+- `FirstTimeSetup.tsx`：Modal 工作流 (歡迎 → 設定密碼 → 確認 → 完成)、進度條、≥8 字元驗證、加密初始 API Keys、設定 `aihub-master-password-set=true`
+- `App.tsx`：根層整合 `FirstTimeSetup`，條件渲染
+
+---
+
+## Sprint 12（完成 ✅） - v1.0.0
+
+### Testing & CI/CD
+- `package.json`：新增 `test`, `test:ui`, `test:coverage` scripts
+- `vitest.config.ts`：React plugin, jsdom/happy-dom, globals, setup file, v8 coverage
+- `tsconfig.app.json`：新增 `vitest/globals`, `node` types
+- `src/test/setup.ts`：測試設定 (localStorage mock, crypto.subtle mock)
+- `secureStorage.test.ts`：13 測試全部通過 (encrypt/decrypt/reEncryptAll/isAvailable)
+- `.github/workflows/ci.yml`：GitHub Actions CI (lint → typecheck → build → test)
+
+### Refactoring & Code Quality
+- Context 拆分：`AgentContext.tsx` + `ConversationContext.tsx` → Provider + Context + Hook 檔案分離 (修復 ESLint `exhaustive-deps`)
+- Import path 更新：`App.tsx`, `ConversationWorkspace.tsx`, `MessageBubble.tsx`, `PromptForm.tsx`, `AIAgentManager.tsx`
+- 完整驗證：`npm run build` ✅, `tsc --noEmit` ✅, `eslint src/` ✅, `npm run test` ✅ (13/13)
+
+### Major Architecture Change: Remove Master Password
+- **secureStorage.ts 重寫**：移除 PBKDF2/主密碼，改用 Web Crypto `generateKey` + AES-GCM
+- 金鑰綁定瀏覽器/profile，換裝置自動失效
+- **useSecureLocalStorage.ts**：移除密碼參數，簡化為直接加密
+- **useApiKeys.ts**：移除 `reEncryptApiKeys`
+- **FirstTimeSetup.tsx**：4 步驟密碼流程 → 單一歡迎頁
+- **ResetAllData.tsx**：移除密碼驗證，直接確認輸入
+- **ChangeMasterPassword.tsx**：**刪除**
+- **App.tsx**：First-time 檢查改用 `aihub-first-time-setup` flag
+- 刪除 `src/pages/Home.tsx` 與空 `src/pages/` 目錄
+
+### Extension & MCP
+- Extension MV3 完整建構：Side Panel, Context Menus, MCP Client (SSE + STDIO)
+- Native Messaging Host (Python) for MCP STDIO
+- MCP Tool Invocation Panel: JSON 參數編輯器、智慧結果渲染
+- Extension 圖示生成 (16/32/48/128px PNG via `sips`)
+
+### Documentation & Deployment
+- `docs/handoff.md`：完整交接文件
+- `docs/privacy/policy.md` + `index.html`：隱私權政策 (無主密碼架構說明)
+- GitHub Pages 部署就緒
+- Chrome Web Store 發布套件：`store-assets/chrome-web-store-package/`
+  - 5 張截圖 (1280x800)
+  - 2 張宣傳圖 (440x280, 1400x560)
+  - `aihub-extension.zip` (98KB)
+  - 提交指南 README
+
+---
+
+## 版本對照表
+
+| 版本 | 日期 | 主要里程碑 |
+|------|------|------------|
+| 0.6.0 | 2026-07-12 | Conversation/Prompt/Agent 基礎 |
+| 0.7.0 | 2026-07-13 | Sprint 7 完整功能 |
+| 0.8.0 | 2026-07-14 | Sprint 8 Provider/Streaming |
+| 0.9.0 | 2026-07-14 | Sprint 9 Reply/Routing/Multi-AI |
+| 0.9.5 | 2026-07-15 | Sprint 10 Compare View |
+| 0.9.8 | 2026-07-15 | Sprint 11 Settings/Encryption (舊架構) |
+| 1.0.0 | 2026-07-15 | Sprint 12 Test/CI/CD + **移除主密碼** + Extension 完整 |

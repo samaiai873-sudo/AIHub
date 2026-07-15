@@ -198,7 +198,7 @@
         <header>
             <div class="logo">AI</div>
             <h1>AIHub 隱私權政策</h1>
-            <p class="meta">最後更新：2025年7月15日 | 版本 1.0.0</p>
+            <p class="meta">最後更新：2026年7月15日 | 版本 1.0.0</p>
         </header>
 
         <section>
@@ -224,17 +224,16 @@
             </ul>
 
             <h3>2.2 本地儲存的資料 (僅存在您的裝置)</h3>
-            <p>以下資料<strong>僅儲存在您的瀏覽器本地</strong> (<code>chrome.storage.local</code>)：</p>
+            <p>以下資料<strong>僅儲存在您的瀏覽器本地</strong> (<code>chrome.storage.local</code> 與 <code>localStorage</code>)：</p>
             <table>
                 <thead>
                     <tr><th>資料類型</th><th>用途</th><th>加密狀態</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>API 金鑰</td><td>調用 AI 提供商 API</td><td><span class="badge badge-encrypted">AES-GCM + PBKDF2 加密</span></td></tr>
+                    <tr><td>API 金鑰</td><td>調用 AI 提供商 API</td><td><span class="badge badge-encrypted">AES-GCM + Web Crypto API 加密</span></td></tr>
                     <tr><td>對話歷史</td><td>顯示歷史聊天記錄</td><td><span class="badge badge-encrypted">加密</span></td></tr>
                     <tr><td>設定偏好</td><td>模型選擇、主題、語言等</td><td><span class="badge badge-encrypted">加密</span></td></tr>
                     <tr><td>MCP 伺服器配置</td><td>連線本地工具伺服器</td><td><span class="badge badge-encrypted">加密</span></td></tr>
-                    <tr><td>主密碼驗證資訊</td><td>解鎖加密儲存</td><td><span class="badge badge-encrypted">PBKDF2 (100,000 迭代)</span></td></tr>
                 </tbody>
             </table>
 
@@ -261,21 +260,22 @@
         <section>
             <h2>3. 資料安全</h2>
             
-            <h3>3.1 加密機制</h3>
+            <h3>3.1 加密機制 (v1.0.0 新架構)</h3>
             <ul>
                 <li><strong>演算法</strong>：AES-GCM (256-bit 金鑰)</li>
-                <li><strong>金鑰衍生</strong>：PBKDF2 (SHA-256, 100,000 次迭代)</li>
-                <li><strong>鹽值</strong>：每筆資料獨立隨機產生 (16 bytes)</li>
+                <li><strong>金鑰生成</strong>：Web Crypto API <code>crypto.subtle.generateKey()</code> 隨機生成</li>
+                <li><strong>金鑰儲存</strong>：localStorage (Base64 編碼原始金鑰)</li>
                 <li><strong>初始向量</strong>：每次加密獨立隨機產生 (12 bytes)</li>
-                <li><strong>裝置綁定</strong>：金鑰衍生包含瀏覽器指紋 (User Agent + 螢幕解析度 + 時區 + 語言)</li>
+                <li><strong>瀏覽器綁定</strong>：金鑰綁定當前瀏覽器設定檔，換裝置/瀏覽器自動失效</li>
             </ul>
 
-            <h3>3.2 主密碼保護</h3>
+            <h3>3.2 無主密碼設計</h3>
             <ul>
-                <li>首次使用需設定主密碼 (最少 8 字元)</li>
-                <li>主密碼<strong>不儲存</strong>，僅在記憶體中驗證</li>
-                <li>支援修改主密碼 (需驗證舊密碼)</li>
-                <li>忘記密碼可透過「重置所有資料」功能清除 (需輸入確認文字)</li>
+                <li>✅ <strong>無需設定密碼</strong> - 首次使用直接進入應用</li>
+                <li>✅ <strong>零摩擦體驗</strong> - 資料自動加密，無感知</li>
+                <li>✅ <strong>裝置級安全</strong> - 金鑰綁定瀏覽器設定檔，換裝置自動失效</li>
+                <li>✅ <strong>無密碼遺忘風險</strong> - 無主密碼即無忘記密碼問題</li>
+                <li>✅ <strong>重置功能保留</strong> - 仍可透過「重置所有資料」清除所有加密資料</li>
             </ul>
         </section>
 
@@ -329,7 +329,6 @@
                 </thead>
                 <tbody>
                     <tr><td>刪除對話</td><td>僅移除該對話，其他資料保留</td></tr>
-                    <tr><td>修改主密碼</td><td>重新加密所有資料 (不遺失資料)</td></tr>
                     <tr><td>重置所有資料</td><td><strong>永久清除</strong> 所有本地儲存 (需輸入「RESET ALL DATA」確認)</td></tr>
                     <tr><td>移除擴充功能</td><td>瀏覽器自動清除 <code>chrome.storage.local</code> 所有資料</td></tr>
                 </tbody>
@@ -405,7 +404,7 @@
         </section>
 
         <footer>
-            <p>本隱私權政策採用繁體中文 (台灣) 撰寫，如有翻譯差異以中文版為準。</        <p>&copy; 2025 AIHub. 開源專案，採用 MIT License.</p>
+            <p>本隱私權政策採用繁體中文 (台灣) 撰寫，如有翻譯差異以中文版為準。</        <p>&copy; 2026 AIHub. 開源專案，採用 MIT License.</p>
         </footer>
     </div>
 </body>
