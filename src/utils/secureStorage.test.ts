@@ -4,7 +4,8 @@ import {
   decryptData, 
   isSecureStorageAvailable, 
   reEncryptAll,
-  secureStorage 
+  secureStorage,
+  ENCRYPTION_VERSION
 } from '../utils/secureStorage';
 
 describe('secureStorage', () => {
@@ -32,7 +33,7 @@ describe('secureStorage', () => {
       expect(encrypted).toHaveProperty('ciphertext');
       expect(encrypted).toHaveProperty('iv');
       expect(encrypted).toHaveProperty('version');
-      expect(encrypted.version).toBe(2);
+      expect(encrypted.version).toBe(ENCRYPTION_VERSION);
 
       const decrypted = await decryptData(encrypted);
       expect(decrypted).toBe(plaintext);

@@ -1,78 +1,96 @@
 import { useState } from "react";
-import { isSecureStorageAvailable } from "../utils/secureStorage";
 
 export default function ResetAllData() {
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleReset = async () => {
+    if (confirmText !== "RESET ALL DATA") {
+      setError("請輸入 \"RESET ALL DATA\" 確認");
+      return;
+    }
 
-    // Confirm action
-    if (window.confirm("⚠️ 警告：此操作將永久刪除所有 API Keys、對話記錄、Prompt Library 等所有資料！\n\n此操作無法復原，確定要繼續嗎？")) {
-      if (!isSecureStorageAvailable()) {
-        alert("當前瀏覽器不支援加密存儲功能");
-        return;
-      }
+    setError("");
+    setIsLoading(true);
 
-      try {
-        setIsLoading(true);
-        setError("");
-
-        // Clear all localStorage data
-        localStorage.clear();
-
-        alert("所有資料已重置完成。頁面將重新載入。");
-        window.location.reload();
-      } catch (err) {
-        setError("重置失敗：" + (err instanceof Error ? err.message : "未知錯誤"));
-        setIsLoading(false);
-      }
-    };
+    try {
+      // Clear all localStorage
+      localStorage.clear();
+      
+      // Reload the page to reset all state
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to reset data:", error);
+      setError("重置失敗，請重試");
+      setIsLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleReset} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ padding: 12, background: "#4d1a1a", border: "1px solid #c62828", borderRadius: 8, marginBottom: 16 }}>
-        <strong style={{ color: "#ef9a9a" }}>⚠️ 危險操作警告</strong>
-        <p style={{ margin: "8px 0 0", fontSize: 13, color: "#ef9a9a" }}>
-          此操作將永久刪除所有資料，包括：
-        </p>
-        <ul style={{ margin: "8px 0", paddingLeft: 20, fontSize: 13, color: "#ef9a9a" }}>
-          <li>所有 API Keys (ChatGPT, Claude, Gemini 等)</li>
-          <li>所有對話記錄</li>
-          <li>所有 Prompt Library 項目</li>
-          <li>所有設定與偏好設定</li>
-        </ul>
-        <p style={{ margin: "8px 0 0", fontSize: 13, color: "#ef9a9a" }}>
-          <strong>此操作不可復原，請三思後再行動。</strong>
-        </p>
-      </div>
-
-      {error && (
-        <div style={{ padding: "10px 12px", borderRadius: 6, background: "#4d1a1a", border: "1px solid #c62828", color: "#ef9a9a", fontSize: 13 }}>
-          {error}
-        </div>
-      )}
-
+    <div>
       <button
-        type="submit"
-        disabled={isLoading}
+        onClick={() => setShowConfirm(!showConfirm)}
         style={{
-          width: "100%",
-          padding: "12px 16px",
+          padding: "10px 16px",
           borderRadius: 8,
-          border: "1px solid #c62828",
-          background: isLoading ? "#555" : "#c62828",
+          border: "1px solid #e74c3c",
+          background: showConfirm ? "#c0392b" : "transparent",
           color: "white",
-          fontWeight: 600,
-          fontSize: 14,
-          cursor: isLoading ? "not-allowed" : "pointer",
-          opacity: isLoading ? 0.7 : 1,
+          cursor: "pointer",
+          fontWeight: 500,
         }}
       >
-        {isLoading ? "重置中..." : "🗑️ 確認重置所有資料"}
+        {showConfirm ? "取消" : "🗑️ 重置所有資料"}
       </button>
-    </form>
+
+      {showConfirm && (
+        <div style={{ marginTop: 16 }}>
+          <p style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>
+            輸入 <code style={{ color: "#f87171" }}>RESET ALL DATA</code> 確認刪除所有資料
+          </p>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => {
+              setConfirmText(e.target.value);
+              setError("");
+            }}
+            placeholder="輸入 RESET ALL DATA 確認"
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #444",
+              background: "#1a1a1a",
+              color: "white",
+              fontSize: 14,
+              boxSizing: "border-box",
+              marginBottom: 12,
+              fontFamily: "monospace",
+            }}
+          />
+          <button
+            onClick={handleReset}
+            disabled={isLoading || confirmText !== "RESET ALL DATA"}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: confirmText === "RESET ALL DATA" && !isLoading ? "#c0392b" : "#444",
+              color: "white",
+              cursor: confirmText === "RESET ALL DATA" && !isLoading ? "pointer" : "not-allowed",
+              fontWeight: 500,
+            }}
+          >
+            {isLoading ? "重置中..." : "確認刪除"}
+          </button>
+          {error && (
+            <p style={{ color: "#f87171", fontSize: 13, marginTop: 8 }}>{error}</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

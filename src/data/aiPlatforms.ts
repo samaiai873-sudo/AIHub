@@ -18,9 +18,9 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🤖",
     url: "https://chatgpt.com",
     models: [
-      { id: "gpt-5", name: "GPT-5" },
-      { id: "gpt-5-thinking", name: "GPT-5 Thinking" },
-      { id: "gpt-4.1", name: "GPT-4.1" },
+      { id: "gpt-4o", name: "GPT-4o" },
+      { id: "gpt-4o-mini", name: "GPT-4o Mini" },
+      { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
     ],
   },
   {
@@ -29,8 +29,9 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🟣",
     url: "https://claude.ai",
     models: [
-      { id: "sonnet-4", name: "Sonnet 4" },
-      { id: "opus-4", name: "Opus 4" },
+      { id: "sonnet-3.5", name: "Sonnet 3.5" },
+      { id: "haiku-3.5", name: "Haiku 3.5" },
+      { id: "opus-3", name: "Opus 3" },
     ],
   },
   {
@@ -39,8 +40,9 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "💎",
     url: "https://gemini.google.com",
     models: [
-      { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
-      { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+      { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+      { id: "gemini-1.0-pro", name: "Gemini 1.0 Pro" },
     ],
   },
   {

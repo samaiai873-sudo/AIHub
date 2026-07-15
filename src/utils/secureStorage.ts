@@ -23,6 +23,8 @@ interface EncryptedData {
 
 const ENCRYPTION_VERSION = 2; // Incremented for new format
 
+export { ENCRYPTION_VERSION };
+
 // Key storage key in localStorage
 const MASTER_KEY_STORAGE_KEY = "aihub-master-encryption-key";
 

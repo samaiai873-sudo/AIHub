@@ -4,7 +4,7 @@ import type { Platform } from "./platforms";
 export const DEFAULT_MODELS: Record<Platform, string> = {
   chatgpt: "gpt-4o",
   claude: "sonnet-3.5",
-  gemini: "gemini-1.5-pro",
+  gemini: "gemini-1.5-flash",
   grok: "grok-4",
   perplexity: "sonar",
   copilot: "copilot",

@@ -18,7 +18,9 @@ export default function App() {
   >("conversation");
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
-  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(true);
+  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(
+    !localStorage.getItem("aihub-first-time-setup")
+  );
 
   const { conversations } = useConversationContext();
   const { prompts } = usePrompts();
@@ -28,6 +30,7 @@ export default function App() {
   const { createConversation } = useConversationContext();
 
   const handleFirstTimeSetupComplete = () => {
+    localStorage.setItem("aihub-first-time-setup", "true");
     setShowFirstTimeSetup(false);
   };
 
