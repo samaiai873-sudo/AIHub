@@ -1,8 +1,6 @@
 // AIHub Background Service Worker (MV3)
 // Handles side panel, context menus, messaging
 
-import { initializeMCP } from "./mcp-client.js";
-
 // State management
 const STATE_KEY = "aihub-state";
 let currentState = {
@@ -159,7 +157,7 @@ async function initializeMCP() {
   }
 }
 
-async function callMCPTool(serverId: string, toolName: string, args: any) {
+async function callMCPTool(serverId, toolName, args) {
   if (!mcpClient) return { error: "MCP not initialized" };
   return mcpClient.callTool(serverId, toolName, args);
 }

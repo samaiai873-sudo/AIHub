@@ -1,7 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  provider?: string;
+  model?: string;
+  isError?: boolean;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  updatedAt: number;
+}
+
+interface Provider {
+  id: string;
+  name: string;
+  models: string[];
+}
+
+interface MCPServer {
+  id: string;
+  name: string;
+  transport: string;
+  config: Record<string, any>;
+}
+
+interface State {
+  activeProvider: string;
+  activeModel: string;
+  apiKeys: Record<string, string>;
+  mcpServers: MCPServer[];
+  isConnected: boolean;
+  conversations: Conversation[];
+  currentConversation: string | null;
+  messages: Message[];
+  isLoading: boolean;
+  sidebarOpen: boolean;
+}
+
+const providers: Provider[] = [
+  { id: 'chatgpt', name: 'ChatGPT', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'] },
+  { id: 'claude', name: 'Claude', models: ['sonnet-3.5', 'haiku-3.5', 'opus-3'] },
+  { id: 'gemini', name: 'Gemini', models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+  { id: 'ollama', name: 'Ollama (本地)', models: ['llama3.1', 'llama3.2', 'qwen2.5', 'mistral', 'codellama'] },
+];
 
 function App() {
-  const [state, setState] = useState({
+  const [state, setState] = useState<State>({
     activeProvider: 'chatgpt',
     activeModel: 'gpt-4o',
     apiKeys: {},
@@ -20,23 +69,11 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showMCP, setShowMCP] = useState(false);
 
-  const providers = [
-    { id: 'chatgpt', name: 'ChatGPT', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'] },
-    { id: 'claude', name: 'Claude', models: ['sonnet-3.5', 'haiku-3.5', 'opus-3'] },
-    { id: 'gemini', name: 'Gemini', models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
-    { id: 'ollama', name: 'Ollama (本地)', models: ['llama3.1', 'llama3.2', 'qwen2.5', 'mistral', 'codellama'] },
-  ];
-
-  useEffect(() => {
-    loadState();
-    scrollToBottom();
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [state.messages]);
-
-  const loadState = async () => {
+  const loadState = useCallback(async () => {
     try {
       const result = await chrome.storage.local.get('aihub-state');
       if (result['aihub-state']) {
@@ -45,31 +82,35 @@ function App() {
     } catch (e) {
       console.error('Failed to load state:', e);
     }
-  };
+  }, []);
 
-  const saveState = async () => {
+  const saveState = useCallback(async () => {
     try {
       await chrome.storage.local.set({ 'aihub-state': state });
     } catch (e) {
       console.error('Failed to save state:', e);
     }
-  };
+  }, [state]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  useEffect(() => {
+    loadState();
+    scrollToBottom();
+  }, [loadState, scrollToBottom]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [state.messages, scrollToBottom]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || state.isLoading) return;
 
-    const userMessage = { role: 'user', content: input, timestamp: Date.now() };
+    const userMessage: Message = { role: 'user', content: input, timestamp: Date.now() };
     const newMessages = [...state.messages, userMessage];
     setState(prev => ({ ...prev, messages: newMessages, isLoading: true }));
     setInput('');
 
     try {
-      // Send message to background script
       const response = await chrome.runtime.sendMessage({
         type: 'SEND_MESSAGE',
         provider: state.activeProvider,
@@ -82,7 +123,7 @@ function App() {
         throw new Error(response.error);
       }
 
-      const assistantMessage = { 
+      const assistantMessage: Message = { 
         role: 'assistant', 
         content: response.content, 
         timestamp: Date.now(),
@@ -96,9 +137,9 @@ function App() {
         isLoading: false 
       }));
     } catch (error) {
-      const errorMessage = { 
+      const errorMessage: Message = { 
         role: 'assistant', 
-        content: `錯誤: ${error.message}`, 
+        content: `錯誤: ${error instanceof Error ? error.message : String(error)}`, 
         timestamp: Date.now(),
         isError: true,
       };
@@ -141,9 +182,23 @@ function App() {
     setState(prev => ({ ...prev, messages: [] }));
   };
 
+  const addMCPServer = () => {
+    const name = prompt('MCP 服務名稱:');
+    const url = prompt('MCP 服務 URL (SSE endpoint):');
+    if (name && url) {
+      chrome.runtime.sendMessage({
+        type: 'MCP_ADD_SERVER',
+        server: { id: Date.now().toString(), name, transport: 'sse', config: { url } }
+      });
+    }
+  };
+
+  const removeMCPServer = (id: string) => {
+    chrome.runtime.sendMessage({ type: 'MCP_REMOVE_SERVER', id });
+  };
+
   return (
     <div className="aihub-app">
-      {/* Top Bar */}
       <header className="header">
         <div className="header-left">
           <button onClick={toggleSidebar} className="icon-btn" title={state.sidebarOpen ? '收起側邊欄' : '展開側邊欄'}>
@@ -185,15 +240,14 @@ function App() {
           </button>
           <button onClick={() => setShowSettings(!showSettings)} className={`icon-btn ${showSettings ? 'active' : ''}`} title="設定">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 21.41a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 1 4.59 3 1.65 1.65 0 0 1 6.31 2.69l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 1 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 1-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H15a1.65 1.65 0 0 0-1 1.51v.09z"></path>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
       </header>
 
       <div className="main-container">
-        {/* Sidebar */}
         <aside className={`sidebar ${state.sidebarOpen ? 'open' : 'collapsed'}`} style={{ width: sidebarWidth }}>
           <div className="sidebar-header">
             <h3>對話列表</h3>
@@ -222,7 +276,6 @@ function App() {
           <div className="sidebar-resizer" onMouseDown={e => startResize(e)}></div>
         </aside>
 
-        {/* Main Chat Area */}
         <main className="chat-area">
           <div className="messages" ref={messagesEndRef}>
             {state.messages.map((msg, i) => (
@@ -275,7 +328,6 @@ function App() {
           </form>
         </main>
 
-        {/* Settings Panel */}
         {showSettings && (
           <aside className="settings-panel">
             <div className="panel-header">
@@ -313,7 +365,6 @@ function App() {
           </aside>
         )}
 
-        {/* MCP Panel */}
         {showMCP && (
           <aside className="mcp-panel">
             <div className="panel-header">
@@ -326,7 +377,7 @@ function App() {
               </button>
             </div>
             <div className="panel-content">
-              <button onClick={() => addMCPServer()} className="add-btn">+ 新增 MCP 服務</button>
+              <button onClick={addMCPServer} className="add-btn">+ 新增 MCP 服務</button>
               <ul className="mcp-list">
                 {state.mcpServers.map(s => (
                   <li key={s.id} className="mcp-item">
@@ -371,21 +422,6 @@ function startResize(e: React.MouseEvent) {
   
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
-}
-
-function addMCPServer() {
-  const name = prompt('MCP 服務名稱:');
-  const url = prompt('MCP 服務 URL (SSE endpoint):');
-  if (name && url) {
-    chrome.runtime.sendMessage({
-      type: 'MCP_ADD_SERVER',
-      server: { id: Date.now().toString(), name, transport: 'sse', config: { url } }
-    });
-  }
-}
-
-function removeMCPServer(id: string) {
-  chrome.runtime.sendMessage({ type: 'MCP_REMOVE_SERVER', id });
 }
 
 export default App;
