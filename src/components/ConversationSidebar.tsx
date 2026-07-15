@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import useConversationSearch from "../hooks/useConversationSearch";
 import { UNCATEGORIZED_PROJECT_DISPLAY } from "../constants/projects";
-import { runOpenInBrowserWorkflow } from "../utils/browserWorkflow";
+
 import type { Conversation } from "../types/conversation";
 import ProjectManager from "./ProjectManager";
 
@@ -615,41 +615,6 @@ export default function ConversationSidebar({
               margin: "4px 0",
             }}
           />
-
-          <button
-            onClick={async () => {
-              const lastUserMessage = [
-                ...targetConversation.messages,
-              ]
-                .reverse()
-                .find(
-                  (message) =>
-                    message.role === "user"
-                );
-
-              await runOpenInBrowserWorkflow(
-                targetConversation.platform,
-                lastUserMessage?.content ?? ""
-              );
-
-              setContextMenu({
-                id: null,
-                x: 0,
-                y: 0,
-              });
-            }}
-            style={{
-              width: "100%",
-              border: "none",
-              background: "transparent",
-              color: "#87ceeb",
-              padding: "10px 12px",
-              textAlign: "left",
-              cursor: "pointer",
-            }}
-          >
-            🌐 Open in Browser
-          </button>
         </div>
       )}
 
