@@ -8,19 +8,21 @@ export const DEFAULT_MODELS: Record<Platform, string> = {
   grok: "grok-4",
   perplexity: "sonar",
   copilot: "copilot",
+  ollama: "llama3.1",
 };
 
 // 全域預設模型（當無法決定時使用）
 export const GLOBAL_DEFAULT_MODEL = "gpt-4o";
 
 // UI 層 model id 列表（用於驗證與下拉選單）
-export const SUPPORTED_MODELS = {
+export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
   chatgpt: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
   claude: ["sonnet-3.5", "haiku-3.5", "opus-3"],
   gemini: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"],
   grok: ["grok-4"],
   perplexity: ["sonar"],
   copilot: ["copilot"],
+  ollama: ["llama3.1", "llama3.2", "qwen2.5", "mistral", "codellama"],
 } as const;
 
 // 取得平台的預設模型
