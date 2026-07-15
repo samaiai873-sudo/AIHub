@@ -1,3 +1,5 @@
+/// <reference types="chrome" />
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Message {
@@ -25,8 +27,11 @@ interface Provider {
 interface MCPServer {
   id: string;
   name: string;
-  transport: string;
+  transport: 'sse' | 'stdio';
   config: Record<string, any>;
+  status?: 'connected' | 'disconnected' | 'connecting' | 'error';
+  toolsCount?: number;
+  lastError?: string;
 }
 
 interface State {
@@ -68,6 +73,22 @@ function App() {
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [showSettings, setShowSettings] = useState(false);
   const [showMCP, setShowMCP] = useState(false);
+  
+  // MCP Modal state
+  const [mcpModal, setMcpModal] = useState<{
+    isOpen: boolean;
+    mode: 'add' | 'edit';
+    server?: MCPServer;
+  }>({ isOpen: false, mode: 'add' });
+  const [mcpForm, setMcpForm] = useState({
+    name: '',
+    transport: 'sse' as 'sse' | 'stdio',
+    url: '',
+    command: '',
+    args: '',
+    env: '',
+  });
+  const [testingConnection, setTestingConnection] = useState<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -182,19 +203,118 @@ function App() {
     setState(prev => ({ ...prev, messages: [] }));
   };
 
-  const addMCPServer = () => {
-    const name = prompt('MCP 服務名稱:');
-    const url = prompt('MCP 服務 URL (SSE endpoint):');
-    if (name && url) {
+  // MCP Modal handlers
+  const openAddMCPModal = () => {
+    setMcpForm({ name: '', transport: 'sse', url: '', command: '', args: '', env: '' });
+    setMcpModal({ isOpen: true, mode: 'add' });
+  };
+
+  const openEditMCPModal = (server: MCPServer) => {
+    setMcpForm({
+      name: server.name,
+      transport: server.transport,
+      url: server.config.url || '',
+      command: server.config.command || '',
+      args: server.config.args?.join(' ') || '',
+      env: JSON.stringify(server.config.env || {}, null, 2),
+    });
+    setMcpModal({ isOpen: true, mode: 'edit', server });
+  };
+
+  const closeMCPModal = () => {
+    setMcpModal({ isOpen: false, mode: 'add' });
+    setMcpForm({ name: '', transport: 'sse', url: '', command: '', args: '', env: '' });
+  };
+
+  const handleMcpFormChange = (field: string, value: string) => {
+    setMcpForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateMcpForm = () => {
+    if (!mcpForm.name.trim()) return '請輸入服務名稱';
+    if (mcpForm.transport === 'sse' && !mcpForm.url.trim()) return '請輸入 SSE URL';
+    if (mcpForm.transport === 'stdio' && !mcpForm.command.trim()) return '請輸入命令';
+    if (mcpForm.transport === 'stdio') {
+      try {
+        JSON.parse(mcpForm.env || '{}');
+      } catch {
+        return '環境變數必須是合法的 JSON';
+      }
+    }
+    return null;
+  };
+
+  const saveMCPServer = async () => {
+    const error = validateMcpForm();
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    const config: Record<string, any> = mcpForm.transport === 'sse'
+      ? { url: mcpForm.url }
+      : { 
+          command: mcpForm.command,
+          args: mcpForm.args.split(' ').filter(Boolean),
+          env: mcpForm.env ? JSON.parse(mcpForm.env) : {},
+        };
+
+    if (mcpModal.mode === 'add') {
       chrome.runtime.sendMessage({
         type: 'MCP_ADD_SERVER',
-        server: { id: Date.now().toString(), name, transport: 'sse', config: { url } }
+        server: { id: Date.now().toString(), name: mcpForm.name, transport: mcpForm.transport, config }
+      });
+    } else if (mcpModal.server) {
+      chrome.runtime.sendMessage({
+        type: 'MCP_UPDATE_SERVER',
+        id: mcpModal.server.id,
+        server: { ...mcpModal.server, name: mcpForm.name, transport: mcpForm.transport, config }
       });
     }
+    closeMCPModal();
   };
 
   const removeMCPServer = (id: string) => {
-    chrome.runtime.sendMessage({ type: 'MCP_REMOVE_SERVER', id });
+    if (confirm('確定要刪除這個 MCP 服務嗎？')) {
+      chrome.runtime.sendMessage({ type: 'MCP_REMOVE_SERVER', id });
+    }
+  };
+
+  const testMCPConnection = async (server: MCPServer) => {
+    setTestingConnection(server.id);
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'MCP_TEST_CONNECTION',
+        server
+      });
+      if (response.error) {
+        alert(`連線失敗: ${response.error}`);
+      } else {
+        alert(`連線成功！發現 ${response.toolsCount || 0} 個工具`);
+      }
+    } catch (error) {
+      alert(`連線失敗: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setTestingConnection(null);
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status) {
+      case 'connected': return '🟢';
+      case 'connecting': return '🟡';
+      case 'error': return '🔴';
+      default: return '⚪';
+    }
+  };
+
+  const getStatusText = (status?: string) => {
+    switch (status) {
+      case 'connected': return '已連線';
+      case 'connecting': return '連線中...';
+      case 'error': return '連線失敗';
+      default: return '未連線';
+    }
   };
 
   return (
@@ -377,22 +497,175 @@ function App() {
               </button>
             </div>
             <div className="panel-content">
-              <button onClick={addMCPServer} className="add-btn">+ 新增 MCP 服務</button>
-              <ul className="mcp-list">
-                {state.mcpServers.map(s => (
-                  <li key={s.id} className="mcp-item">
-                    <span>{s.name}</span>
-                    <button onClick={() => removeMCPServer(s.id)} className="icon-btn small">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <button onClick={openAddMCPModal} className="add-btn">+ 新增 MCP 服務</button>
+              
+              {state.mcpServers.length === 0 ? (
+                <div className="empty-state" style={{marginTop: '12px', fontSize: '12px', color: '#888'}}>
+                  尚無 MCP 服務，點擊上方按鈕新增
+                </div>
+              ) : (
+                <ul className="mcp-list">
+                  {state.mcpServers.map(s => (
+                    <li key={s.id} className="mcp-item">
+                      <div className="mcp-server-info">
+                        <div className="mcp-server-header">
+                          <span className="mcp-status-dot" style={{ 
+                            backgroundColor: s.status === 'connected' ? '#22c55e' : 
+                                           s.status === 'connecting' ? '#eab308' : 
+                                           s.status === 'error' ? '#ef4444' : '#6b7280' 
+                          }}></span>
+                          <span className="mcp-server-name">{s.name}</span>
+                          <span className={`mcp-transport-badge ${s.transport}`}>{s.transport.toUpperCase()}</span>
+                        </div>
+                        <div className="mcp-server-details">
+                          <span className="mcp-server-status">{getStatusText(s.status)}</span>
+                          {s.toolsCount !== undefined && <span className="mcp-tools-count">🔧 {s.toolsCount} 工具</span>}
+                          {s.lastError && <span className="mcp-error" title={s.lastError}>⚠️ {s.lastError.substring(0, 50)}...</span>}
+                          {s.transport === 'sse' && <span className="mcp-config-url">{s.config.url}</span>}
+                          {s.transport === 'stdio' && <span className="mcp-config-cmd">{s.config.command} {s.config.args?.join(' ') || ''}</span>}
+                        </div>
+                      </div>
+                      <div className="mcp-server-actions">
+                        <button 
+                          onClick={() => testMCPConnection(s)} 
+                          disabled={testingConnection === s.id}
+                          className={`icon-btn ${testingConnection === s.id ? 'loading' : ''}`}
+                          title={testingConnection === s.id ? '測試中...' : '測試連線'}
+                        >
+                          {testingConnection === s.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin">
+                              <circle cx="12" cy="12" r="10" strokeOpacity="0.25"></circle>
+                              <path d="M12 2a10 10 0 0 1 10 10"></path>
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                            </svg>
+                          )}
+                        </button>
+                        <button 
+                          onClick={() => openEditMCPModal(s)} 
+                          className="icon-btn"
+                          title="編輯"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => removeMCPServer(s.id)} 
+                          className="icon-btn small danger"
+                          title="刪除"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </aside>
+        )}
+
+        {/* MCP Modal */}
+        {mcpModal.isOpen && (
+          <div className="modal-overlay" onClick={closeMCPModal}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>{mcpModal.mode === 'add' ? '新增 MCP 服務' : '編輯 MCP 服務'}</h3>
+                <button onClick={closeMCPModal} className="icon-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div className="modal-content">
+                <div className="setting-item">
+                  <label>服務名稱 <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    value={mcpForm.name}
+                    onChange={e => handleMcpFormChange('name', e.target.value)}
+                    placeholder="例如: My MCP Server"
+                  />
+                </div>
+                
+                <div className="setting-item">
+                  <label>傳輸協定 <span className="required">*</span></label>
+                  <select
+                    value={mcpForm.transport}
+                    onChange={e => handleMcpFormChange('transport', e.target.value as 'sse' | 'stdio')}
+                    className="transport-select"
+                  >
+                    <option value="sse">SSE (Server-Sent Events)</option>
+                    <option value="stdio">STDIO (本地進程)</option>
+                  </select>
+                </div>
+
+                {mcpForm.transport === 'sse' && (
+                  <div className="setting-item">
+                    <label>SSE Endpoint URL <span className="required">*</span></label>
+                    <input
+                      type="url"
+                      value={mcpForm.url}
+                      onChange={e => handleMcpFormChange('url', e.target.value)}
+                      placeholder="https://example.com/mcp/sse"
+                    />
+                    <small className="help-text">MCP 伺服器的 SSE 端點，通常類似 https://server.com/mcp/sse</small>
+                  </div>
+                )}
+
+                {mcpForm.transport === 'stdio' && (
+                  <>
+                    <div className="setting-item">
+                      <label>命令 <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        value={mcpForm.command}
+                        onChange={e => handleMcpFormChange('command', e.target.value)}
+                        placeholder="npx, node, python, 或完整路徑"
+                      />
+                      <small className="help-text">啟動 MCP 伺服器的命令 (需在 PATH 中或使用完整路徑)</small>
+                    </div>
+                    <div className="setting-item">
+                      <label>參數</label>
+                      <input
+                        type="text"
+                        value={mcpForm.args}
+                        onChange={e => handleMcpFormChange('args', e.target.value)}
+                        placeholder="-y @modelcontextprotocol/server-filesystem /path/to/dir"
+                      />
+                      <small className="help-text">命令參數，以空格分隔</small>
+                    </div>
+                    <div className="setting-item">
+                      <label>環境變數 (JSON)</label>
+                      <textarea
+                        value={mcpForm.env}
+                        onChange={e => handleMcpFormChange('env', e.target.value)}
+                        placeholder='{"API_KEY": "xxx", "DEBUG": "true"}'
+                        rows={3}
+                        style={{fontFamily: 'monospace', fontSize: '11px'}}
+                      />
+                      <small className="help-text">傳遞給子進程的環境變數，JSON 格式</small>
+                    </div>
+                  </>
+                )}
+
+                <div className="modal-footer">
+                  <button onClick={closeMCPModal} className="btn btn-secondary">取消</button>
+                  <button onClick={saveMCPServer} className="btn btn-primary">
+                    {mcpModal.mode === 'add' ? '新增' : '儲存變更'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
