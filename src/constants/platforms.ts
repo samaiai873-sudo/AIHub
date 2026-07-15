@@ -6,7 +6,8 @@ export type Platform =
   | "grok"
   | "perplexity"
   | "copilot"
-  | "ollama";
+  | "ollama"
+  | "lmstudio";
 
 // 預設平台
 export const DEFAULT_PLATFORM: Platform = "chatgpt";
@@ -20,6 +21,7 @@ export const SUPPORTED_PLATFORMS: Platform[] = [
   "copilot",
   "grok",
   "ollama",
+  "lmstudio",
 ];
 
 // 驗證字串是否為有效的 Platform

@@ -52,6 +52,7 @@ const providers: Provider[] = [
   { id: 'claude', name: 'Claude', models: ['sonnet-3.5', 'haiku-3.5', 'opus-3'] },
   { id: 'gemini', name: 'Gemini', models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
   { id: 'ollama', name: 'Ollama (本地)', models: ['llama3.1', 'llama3.2', 'qwen2.5', 'mistral', 'codellama'] },
+  { id: 'lmstudio', name: 'LM Studio (本地)', models: ['local-model'] },
 ];
 
 function App() {
@@ -461,7 +462,7 @@ function App() {
             </div>
             <div className="panel-content">
               <h4>API Keys</h4>
-              {providers.filter(p => p.id !== 'ollama').map(p => (
+              {providers.filter(p => p.id !== 'ollama' && p.id !== 'lmstudio').map(p => (
                 <div key={p.id} className="setting-item">
                   <label>{p.name} API Key</label>
                   <input
@@ -479,6 +480,15 @@ function App() {
                   value={localStorage.getItem('ollama-base-url') || 'http://localhost:11434'}
                   onChange={e => localStorage.setItem('ollama-base-url', e.target.value)}
                   placeholder="http://localhost:11434"
+                />
+              </div>
+              <div className="setting-item">
+                <label>LM Studio 端點</label>
+                <input
+                  type="text"
+                  value={localStorage.getItem('lmstudio-base-url') || 'http://localhost:1234/v1'}
+                  onChange={e => localStorage.setItem('lmstudio-base-url', e.target.value)}
+                  placeholder="http://localhost:1234/v1"
                 />
               </div>
             </div>

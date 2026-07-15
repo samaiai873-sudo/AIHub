@@ -9,6 +9,7 @@ export const DEFAULT_MODELS: Record<Platform, string> = {
   perplexity: "sonar",
   copilot: "copilot",
   ollama: "llama3.1",
+  lmstudio: "local-model",
 };
 
 // 全域預設模型（當無法決定時使用）
@@ -23,6 +24,7 @@ export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
   perplexity: ["sonar"],
   copilot: ["copilot"],
   ollama: ["llama3.1", "llama3.2", "qwen2.5", "mistral", "codellama"],
+  lmstudio: ["local-model"],
 } as const;
 
 // 取得平台的預設模型

@@ -70,4 +70,26 @@ export const aiPlatforms: AIPlatform[] = [
       { id: "grok-4", name: "Grok 4" },
     ],
   },
+  {
+    id: "ollama",
+    name: "Ollama (本地)",
+    icon: "🦙",
+    url: "http://localhost:11434",
+    models: [
+      { id: "llama3.1", name: "Llama 3.1" },
+      { id: "llama3.2", name: "Llama 3.2" },
+      { id: "qwen2.5", name: "Qwen 2.5" },
+      { id: "mistral", name: "Mistral" },
+      { id: "codellama", name: "Code Llama" },
+    ],
+  },
+  {
+    id: "lmstudio",
+    name: "LM Studio (本地)",
+    icon: "🧪",
+    url: "http://localhost:1234",
+    models: [
+      { id: "local-model", name: "本地載入模型" },
+    ],
+  },
 ];
