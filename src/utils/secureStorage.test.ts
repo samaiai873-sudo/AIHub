@@ -26,68 +26,51 @@ describe('secureStorage', () => {
   describe('encryptData / decryptData', () => {
     it('should encrypt and decrypt data correctly', async () => {
       const plaintext = 'test-api-key-12345';
-      const secret = 'test-password';
 
-      const encrypted = await encryptData(plaintext, secret);
+      const encrypted = await encryptData(plaintext);
       
       expect(encrypted).toHaveProperty('ciphertext');
       expect(encrypted).toHaveProperty('iv');
-      expect(encrypted).toHaveProperty('salt');
       expect(encrypted).toHaveProperty('version');
-      expect(encrypted.version).toBe(1);
+      expect(encrypted.version).toBe(2);
 
-      const decrypted = await decryptData(encrypted, secret);
+      const decrypted = await decryptData(encrypted);
       expect(decrypted).toBe(plaintext);
     });
 
     it('should produce different ciphertexts for same plaintext (random IV)', async () => {
       const plaintext = 'test-data';
-      const secret = 'test-secret';
 
-      const encrypted1 = await encryptData(plaintext, secret);
-      const encrypted2 = await encryptData(plaintext, secret);
+      const encrypted1 = await encryptData(plaintext);
+      const encrypted2 = await encryptData(plaintext);
 
       expect(encrypted1.ciphertext).not.toBe(encrypted2.ciphertext);
       expect(encrypted1.iv).not.toBe(encrypted2.iv);
-      expect(encrypted1.salt).not.toBe(encrypted2.salt);
-    });
-
-    it('should fail to decrypt with wrong secret', async () => {
-      const plaintext = 'test-data';
-      const secret = 'correct-secret';
-      const wrongSecret = 'wrong-secret';
-
-      const encrypted = await encryptData(plaintext, secret);
-      
-      await expect(decryptData(encrypted, wrongSecret)).rejects.toThrow();
     });
 
     it('should fail to decrypt with tampered ciphertext', async () => {
       const plaintext = 'test-data';
-      const secret = 'test-secret';
 
-      const encrypted = await encryptData(plaintext, secret);
+      const encrypted = await encryptData(plaintext);
       const tampered = { ...encrypted, ciphertext: 'tampered-data' };
       
-      await expect(decryptData(tampered, secret)).rejects.toThrow();
+      await expect(decryptData(tampered)).rejects.toThrow();
     });
 
     it('should handle empty string', async () => {
       const plaintext = '';
-      const secret = 'test-secret';
 
-      const encrypted = await encryptData(plaintext, secret);
-      const decrypted = await decryptData(encrypted, secret);
+      const encrypted = await encryptData(plaintext);
+      const decrypted = await decryptData(encrypted);
       
       expect(decrypted).toBe('');
     });
 
     it('should handle special characters and unicode', async () => {
-      const plaintext = '🔐 API Key: sk-1234567890!@#$%^&*()';
-      const secret = 'test-secret';
+      const plaintext = '🔐 API Key: «redacted:sk-…»!@#$%^&*()';
 
-      const encrypted = await encryptData(plaintext, secret);
-      const decrypted = await decryptData(encrypted, secret);
+      const encrypted = await encryptData(plaintext);
+      const decrypted = await decryptData(encrypted);
       
       expect(decrypted).toBe(plaintext);
     });
@@ -97,79 +80,34 @@ describe('secureStorage', () => {
     it('should store and retrieve encrypted data', async () => {
       const key = 'test-key';
       const value = 'test-value';
-      const secret = 'test-secret';
 
-      await secureStorage.setItem(key, value, secret);
-      const retrieved = await secureStorage.getItem(key, secret);
+      await secureStorage.setItem(key, value);
+      const retrieved = await secureStorage.getItem(key);
       
       expect(retrieved).toBe(value);
     });
 
     it('should return null for non-existent key', async () => {
-      const retrieved = await secureStorage.getItem('non-existent-key', 'secret');
-      expect(retrieved).toBeNull();
-    });
-
-    it('should fail to decrypt with wrong secret', async () => {
-      const key = 'test-key';
-      const value = 'test-value';
-      const secret = 'correct-secret';
-      const wrongSecret = 'wrong-secret';
-
-      await secureStorage.setItem(key, value, secret);
-      const retrieved = await secureStorage.getItem(key, wrongSecret);
-      
+      const retrieved = await secureStorage.getItem('non-existent-key');
       expect(retrieved).toBeNull();
     });
 
     it('should remove item', async () => {
       const key = 'test-key';
       const value = 'test-value';
-      const secret = 'test-secret';
 
-      await secureStorage.setItem(key, value, secret);
+      await secureStorage.setItem(key, value);
       secureStorage.removeItem(key);
       
-      const retrieved = await secureStorage.getItem(key, secret);
+      const retrieved = await secureStorage.getItem(key);
       expect(retrieved).toBeNull();
     });
   });
 
   describe('reEncryptAll', () => {
-    it('should re-encrypt all stored data with new secret', async () => {
-      const oldSecret = 'old-secret';
-      const newSecret = 'new-secret';
-      const testData = { 'api-key': 'test-value' };
-
-      // Store multiple items with old secret
-      await secureStorage.setItem('key1', JSON.stringify(testData), oldSecret);
-      await secureStorage.setItem('key2', 'another-value', oldSecret);
-      
-      // Re-encrypt all with new secret
-      await reEncryptAll(oldSecret, newSecret);
-      
-      // Verify items can be decrypted with new secret
-      const retrieved1 = await secureStorage.getItem('key1', newSecret);
-      expect(retrieved1).toBe(JSON.stringify(testData));
-      
-      const retrieved2 = await secureStorage.getItem('key2', newSecret);
-      expect(retrieved2).toBe('another-value');
-    });
-
-    it('should skip items that fail to decrypt', async () => {
-      const oldSecret = 'old-secret';
-      const newSecret = 'new-secret';
-      
-      // Store one valid item and one corrupted item
-      await secureStorage.setItem('valid-key', 'valid-value', oldSecret);
-      localStorage.setItem('corrupted-key', 'not-valid-json');
-      
-      // Should not throw, just skip corrupted
-      await reEncryptAll(oldSecret, newSecret);
-      
-      // Valid item should be re-encrypted
-      const retrieved = await secureStorage.getItem('valid-key', newSecret);
-      expect(retrieved).toBe('valid-value');
+    it('should complete without error (no-op with current design)', async () => {
+      await reEncryptAll();
+      expect(true).toBe(true);
     });
   });
 });

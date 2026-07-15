@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1400, height=560">
+    <title>AIHub - Promotional Banner</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            color: #fff; 
+            width: 1400px; 
+            height: 560px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(45, 126, 247, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(45, 126, 247, 0.05) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+        .bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(45, 126, 247, 0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: blur(80px);
+        }
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+            max-width: 1000px;
+        }
+        .logo { 
+            width: 96px; height: 96px; 
+            background: linear-gradient(135deg, #2d7ef7 0%, #6366f1 100%); 
+            border-radius: 24px; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            margin-bottom: 24px; font-size: 42px; font-weight: 800; color: white;
+            box-shadow: 0 16px 48px rgba(45, 126, 247, 0.4);
+        }
+        h1 { 
+            font-size: 48px; font-weight: 800; margin-bottom: 16px; 
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #818cf8 100%); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            letter-spacing: -1px;
+        }
+        .tagline { 
+            font-size: 20px; color: #c7d2fe; margin-bottom: 32px; font-weight: 500; 
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .features { 
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; 
+            margin-bottom: 40px;
+        }
+        .feature { 
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; 
+            padding: 10px 20px; 
+            background: rgba(45, 126, 247, 0.1); 
+            border: 1px solid rgba(45, 126, 247, 0.2); 
+            border-radius: 100px; 
+            color: #a5b4fc; 
+            font-weight: 600;
+        }
+        .feature-icon { font-size: 16px; }
+        .screenshots {
+            display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .screenshot-mock {
+            width: 280px;
+            height: 175px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .screenshot-mock:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 32px 64px rgba(45, 126, 247, 0.3);
+        }
+        .shot-header {
+            height: 32px;
+            background: #252525;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+        }
+        .shot-dots { display: flex; gap: 6px; }
+        .shot-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .shot-dot.red { background: #ff5f57; }
+        .shot-dot.yellow { background: #ffbd2e; }
+        .shot-dot.green { background: #28ca42; }
+        .shot-content { padding: 16px; font-size: 11px; color: #ccc; line-height: 1.5; }
+        .shot-content .line { height: 14px; background: #2d2d2d; border-radius: 4px; margin-bottom: 8px; }
+        .shot-content .line.short { width: 60%; }
+        .shot-content .line.medium { width: 85%; }
+        .shot-content .line.full { width: 100%; }
+        .shot-content .code-block { height: 60px; background: #1e1e1e; border: 1px solid #333; border-radius: 6px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <div class="logo">AI</div>
+        <h1>AIHub</h1>
+        <p class="tagline">一個介面，連接所有 AI · 本地模型優先 · MCP 工具整合</p>
+        <div class="features">
+            <span class="feature"><span class="feature-icon">🤖</span>多模型支援</span>
+            <span class="feature"><span class="feature-icon">🔒</span>端到端加密</span>
+            <span class="feature"><span class="feature-icon">🏠</span>本地模型</span>
+            <span class="feature"><span class="feature-icon">🔧</span>MCP 工具</span>
+            <span class="feature"><span class="feature-icon">⚡</span>並行比較</span>
+            <span class="feature"><span class="feature-icon">🎯</span>智能路由</span>
+        </div>
+        <div class="screenshots">
+            <div class="screenshot-mock">
+                <div class="shot-header">
+                    <div class="shot-dots">
+                        <div class="shot-dot red"></div>
+                        <div class="shot-dot yellow"></div>
+                        <div class="shot-dot green"></div>
+                    </div>
+                </div>
+                <div class="shot-content">
+                    <div class="line full"></div>
+                    <div class="line medium"></div>
+                    <div class="line short"></div>
+                    <div class="code-block"></div>
+                </div>
+            </div>
+            <div class="screenshot-mock">
+                <div class="shot-header">
+                    <div class="shot-dots">
+                        <div class="shot-dot red"></div>
+                        <div class="shot-dot yellow"></div>
+                        <div class="shot-dot green"></div>
+                    </div>
+                </div>
+                <div class="shot-content">
+                    <div class="line full"></div>
+                    <div class="line full"></div>
+                    <div class="line medium"></div>
+                    <div class="code-block"></div>
+                </div>
+            </div>
+            <div class="screenshot-mock">
+                <div class="shot-header">
+                    <div class="shot-dots">
+                        <div class="shot-dot red"></div>
+                        <div class="shot-dot yellow"></div>
+                        <div class="shot-dot green"></div>
+                    </div>
+                </div>
+                <div class="shot-content">
+                    <div class="line full"></div>
+                    <div class="line medium"></div>
+                    <div class="line short"></div>
+                    <div class="code-block"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

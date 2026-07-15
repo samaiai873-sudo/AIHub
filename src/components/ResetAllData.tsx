@@ -1,10 +1,9 @@
-import useApiKeys from "../hooks/useApiKeys";
+import { useState } from "react";
 import { isSecureStorageAvailable } from "../utils/secureStorage";
 
 export default function ResetAllData() {
-  const { apiKeys } = useApiKeys();
-
-  const hasApiKeys = Object.keys(apiKeys).length > 0;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,34 +16,20 @@ export default function ResetAllData() {
       }
 
       try {
+        setIsLoading(true);
+        setError("");
+
         // Clear all localStorage data
         localStorage.clear();
 
-        // Also clear any other app-related localStorage keys
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.startsWith("aihub-") || key.startsWith("aihub_"))) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-
         alert("所有資料已重置完成。頁面將重新載入。");
         window.location.reload();
-      } catch (error) {
-        alert("重置失敗：" + (error instanceof Error ? error.message : "未知錯誤"));
+      } catch (err) {
+        setError("重置失敗：" + (err instanceof Error ? err.message : "未知錯誤"));
+        setIsLoading(false);
       }
-    }
+    };
   };
-
-  if (!hasApiKeys) {
-    return (
-      <div style={{ padding: 16, textAlign: "center", color: "#888" }}>
-        尚未設定任何 API Key，無需重置資料。
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleReset} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -64,21 +49,29 @@ export default function ResetAllData() {
         </p>
       </div>
 
+      {error && (
+        <div style={{ padding: "10px 12px", borderRadius: 6, background: "#4d1a1a", border: "1px solid #c62828", color: "#ef9a9a", fontSize: 13 }}>
+          {error}
+        </div>
+      )}
+
       <button
         type="submit"
+        disabled={isLoading}
         style={{
           width: "100%",
           padding: "12px 16px",
           borderRadius: 8,
           border: "1px solid #c62828",
-          background: "#c62828",
+          background: isLoading ? "#555" : "#c62828",
           color: "white",
           fontWeight: 600,
           fontSize: 14,
-          cursor: "pointer",
+          cursor: isLoading ? "not-allowed" : "pointer",
+          opacity: isLoading ? 0.7 : 1,
         }}
       >
-        🗑️ 確認重置所有資料
+        {isLoading ? "重置中..." : "🗑️ 確認重置所有資料"}
       </button>
     </form>
   );

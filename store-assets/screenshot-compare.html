@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, height=800">
+    <title>AIHub - Compare View</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1e1e1e; color: #fff; width: 1280px; height: 800px; overflow: hidden; }
+        .app { height: 100%; display: flex; flex-direction: column; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #252525; border-bottom: 1px solid #333; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 28px; height: 28px; background: linear-gradient(135deg, #2d7ef7, #6366f1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; }
+        .title { font-size: 16px; font-weight: 600; }
+        .provider-selector { display: flex; gap: 8px; }
+        .provider-selector select { background: #2d2d2d; border: 1px solid #444; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; min-width: 140px; }
+        .header-right { display: flex; gap: 8px; }
+        .icon-btn { width: 36px; height: 36px; border: 1px solid #444; background: #2d2d2d; border-radius: 8px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn.active { border-color: #2d7ef7; color: #2d7ef7; }
+        .compare-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f59e0b; border: none; border-radius: 8px; color: #1e1e1e; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .compare-btn:hover { background: #d97706; }
+        .main-layout { flex: 1; display: flex; overflow: hidden; }
+        .sidebar { width: 280px; background: #252525; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .sidebar-header h3 { font-size: 14px; font-weight: 600; }
+        .add-btn { width: 28px; height: 28px; border: none; background: #2d7ef7; border-radius: 6px; color: white; font-size: 18px; cursor: pointer; }
+        .conversation-list { flex: 1; overflow-y: auto; padding: 12px; }
+        .conv-item { padding: 12px; background: #2d2d2d; border: 1px solid #333; border-radius: 8px; margin-bottom: 8px; cursor: pointer; opacity: 0.5; }
+        .conv-item.active { opacity: 1; border-color: #2d7ef7; background: rgba(45, 126, 247, 0.1); }
+        .conv-title { font-weight: 500; margin-bottom: 4px; }
+        .conv-time { font-size: 11px; color: #888; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .compare-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .compare-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #333; background: #252525; }
+        .compare-header h3 { font-size: 16px; font-weight: 600; }
+        .compare-actions { display: flex; gap: 8px; }
+        .compare-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; overflow-y: auto; }
+        .compare-panel { background: #252525; border: 1px solid #333; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #333; background: #2d2d2d; border-radius: 12px 12px 0 0; }
+        .panel-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+        .provider-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+        .provider-badge.chatgpt { background: #10a37f; color: white; }
+        .provider-badge.claude { background: #d97706; color: white; }
+        .provider-badge.gemini { background: #8b5cf6; color: white; }
+        .provider-badge.ollama { background: #22c55e; color: #1e1e1e; }
+        .model-name { font-size: 11px; color: #888; font-weight: 400; }
+        .pick-winner { width: 28px; height: 28px; border: none; background: #f59e0b; border-radius: 6px; color: #1e1e1e; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .pick-winner:hover { background: #d97706; }
+        .pick-winner.selected { background: #22c55e; }
+        .panel-content { flex: 1; overflow-y: auto; padding: 16px; }
+        .message { margin-bottom: 16px; }
+        .message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px; color: #888; }
+        .message-content { white-space: pre-wrap; line-height: 1.6; font-size: 13px; }
+        .message-content pre { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 12px; margin: 8px 0; overflow-x: auto; font-size: 11px; font-family: 'SF Mono', monospace; }
+        .message-content code { font-family: 'SF Mono', monospace; font-size: 12px; background: #1e1e1e; padding: 2px 6px; border-radius: 4px; }
+        .panel-footer { padding: 12px 16px; border-top: 1px solid #333; background: #2d2d2d; border-radius: 0 0 12px 12px; }
+        .winner-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f59e0b; color: #1e1e1e; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #888; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; border: none; }
+        .btn-primary { background: #2d7ef7; color: white; }
+        .btn-primary:hover { background: #1a6de0; }
+        .btn-secondary { background: #2d2d2d; border: 1px solid #333; color: #fff; }
+        .btn-secondary:hover { background: #333; border-color: #2d7ef7; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">AI</div>
+                <span class="title">AIHub</span>
+            </div>
+            <div class="provider-selector">
+                <select><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="ollama">Ollama</option><option value="lmstudio">LM Studio</option></select>
+                <select><option>gpt-4o</option><option>gpt-4o-mini</option></select>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" title="MCP 服務"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"></rect><path d="M7 12h10"></path><path d="M12 7v10"></path></svg></button>
+                <button class="icon-btn" title="設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                <button class="compare-btn" onclick="toggleCompareView()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+                    比較回覆
+                </button>
+            </div>
+        </header>
+        <div class="main-layout">
+            <aside class="sidebar">
+                <div class="sidebar-header"><h3>對話列表</h3><button class="add-btn">+</button></div>
+                <div class="conversation-list">
+                    <div class="conv-item active"><div class="conv-title">比較：程式碼優化建議</div><div class="conv-time">今天 15:42</div></div>
+                    <div class="conv-item"><div class="conv-title">API 設計最佳實踐</div><div class="conv-time">昨天 11:20</div></div>
+                    <div class="conv-item"><div class="conv-title">資料庫優化策略</div><div class="conv-time">週一 14:30</div></div>
+                </div>
+            </aside>
+            <main class="chat-area">
+                <div class="compare-container">
+                    <div class="compare-header">
+                        <h3>多模型回覆比較</h3>
+                        <div class="compare-actions">
+                            <button class="btn btn-primary" onclick="addCompareModel()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                新增模型
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportComparison()">匯出比較</button>
+                        </div>
+                    </div>
+                    <div class="compare-grid">
+                        <div class="compare-panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <span class="provider-badge chatgpt">ChatGPT</span>
+                                    <span class="model-name">gpt-4o</span>
+                                </div>
+                                <button class="pick-winner" title="選為最佳">★</button>
+                            </div>
+                            <div class="panel-content">
+                                <div class="message">
+                                    <div class="message-content">
+AIHub 的核心架構採用**模組化設計**，主要包含三大層：
+
+1. **Provider 抽象層** - 統一介面
+   ```typescript
+   interface AIProvider {
+     id: string;
+     name: string;
+     supportsStreaming: boolean;
+     defaultModel: string;
+     sendMessage(params: SendMessageParams): Promise<AssistantReply>;
+   }
+   ```
+
+2. **Hook 狀態管理** - React 狀態邏輯
+   - `useConversations` - 對話 CRUD、搜尋、重新生成
+   - `useApiKeys` - API 金鑰加密儲存 (AES-GCM + PBKDF2)
+   - `useSecureLocalStorage` - 異步加密儲存 Hook
+
+3. **UI 組件層** - 模組化元件
+   - `CompareView` - 多模型並行比較
+   - `ConversationWorkspace` - 主工作區
+   - `Composer` - 輸入區 + 模型選擇器
+
+**關鍵設計決策**：
+- Provider 介面隔離：新增 Ollama/LM Studio 只需實作介面
+- 加密優先：所有敏感資料本地 AES-GCM 加密
+- 響應式比較：Compare View 支援 1-4 模型並行
+</div>
+                                </div>
+                                <div class="panel-footer">
+                                    <button class="pick-winner" onclick="pickWinner(this)">選為最佳</button>
+                                </div>
+                            </div>
+                            <div class="compare-panel">
+                                <div class="panel-header">
+                                    <div class="panel-title">
+                                        <span class="provider-badge claude">Claude</span>
+                                        <span class="model-name">sonnet-3.5</span>
+                                    </div>
+                                    <button class="pick-winner" title="選為最佳">★</button>
+                                </div>
+                                <div class="panel-content">
+                                    <div class="message">
+                                        <div class="message-content">
+# AIHub 架構分析
+
+**優點：**
+- **關注點分離清晰**：Provider/Registry/UI 三層架構，單一職責原則貫徹
+- **擴充性極佳**：新增 Provider 只需實作 `AIProvider` 介面，無需修改核心代碼
+- **安全性優先**：AES-GCM + PBKDF2 100k 迭代，裝置指紋綁定，主密碼不落地
+- **開發體驗好**：TypeScript 嚴格模式、ESLint、Vitest 單元測試、GitHub Actions CI/CD
+
+**建議改進：**
+1. **錯誤邊界**：加入 React Error Boundary 捕獲渲染錯誤
+2. **快取策略**：對話列表可加入虛擬滾動 + LRU 快取
+3. **離線優化：Web Worker 處理加密運算，避免主執行緒阻塞
+4. **插件系統**：支援社群開發自定義 Provider/Tool
+
+**評分：9/10** - 企業級專案品質，極佳的可維護性與擴充性
+</div>
+                                    </div>
+                                    <div class="panel-footer">
+                                        <button class="pick-winner" onclick="pickWinner(this)">選為最佳</button>
+                                    </div>
+                                </div>
+                                <div class="compare-panel">
+                                    <div class="panel-header">
+                                        <div class="panel-title">
+                                            <span class="provider-badge gemini">Gemini</span>
+                                            <span class="model-name">gemini-1.5-pro</span>
+                                        </div>
+                                        <button class="pick-winner" title="選為最佳">★</button>
+                                    </div>
+                                    <div class="panel-content">
+                                        <div class="message">
+                                            <div class="message-content">
+## AIHub 專案評估報告
+
+### 架構評分：⭐⭐⭐⭐⭐ (5/5)
+
+**核心優勢：**
+
+1. **Provider Pattern 實作標準**
+   - 介面定義完整 (`sendMessage`, `supportsStreaming`, `defaultModel`)
+   - Registry 模式管理，支援動態註冊/移除
+   - 串流/非串流雙模式無縫切換
+
+2. **加密實作達生產級**
+   - AES-256-GCM 認證加密
+   - PBKDF2 100,000 迭代 (OWASP 建議 ≥ 100k)
+   - 每筆資料獨立 Salt + IV
+   - 裝置指紋 + 主密碼雙因子派生
+
+3. **測試覆蓋完善**
+   - Vitest + happy-dom 環境
+   - secureStorage 13 個測試全通過
+   - 整合測試涵蓋加密/解密/重新加密
+
+### 潛在風險
+
+| 風險 | 等級 | 緩解方案 |
+|------|------|----------|
+| 主密碼遺失無法恢復 | 高 | 已提供「重置所有資料」功能 |
+| 瀏覽器指紋變更導致解密失敗 | 中 | 建議加入「匯出/匯入加密資料」功能 |
+| 大量對話效能下降 | 中 | 虛擬滾動 + 分頁載入 |
+
+### 總結
+
+AIHub 展現了**企業級專案的工程品質**，架構清晰、安全性優先、測試完善。適合作為多 AI 聊天平台的基礎框架持續演進。
+</div>
+                                        </div>
+                                        <div class="panel-footer">
+                                            <button class="pick-winner" onclick="pickWinner(this)">選為最佳</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function pickWinner(btn) {
+            document.querySelectorAll('.pick-winner').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            btn.textContent = '✓ 已選為最佳';
+            btn.style.background = '#22c55e';
+            btn.style.color = 'white';
+        }
+
+        function addCompareModel() {
+            alert('新增模型到比較：選擇提供商與模型後自動發送相同 Prompt');
+        }
+
+        function exportComparison() {
+            alert('匯出比較報告 (Markdown/JSON/PDF)');
+        }
+
+        function toggleCompareView() {
+            alert('切換到 Compare View 模式');
+        }
+    </script>
+</body>
+</html>

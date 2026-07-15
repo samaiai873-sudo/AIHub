@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, height=800">
+    <title>AIHub - Tool Invocation Panel</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1e1e1e; color: #fff; width: 1280px; height: 800px; overflow: hidden; }
+        .app { height: 100%; display: flex; flex-direction: column; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #252525; border-bottom: 1px solid #333; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 28px; height: 28px; background: linear-gradient(135deg, #2d7ef7, #6366f1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; }
+        .title { font-size: 16px; font-weight: 600; }
+        .header-right { display: flex; gap: 8px; }
+        .icon-btn { width: 36px; height: 36px; border: 1px solid #444; background: #2d2d2d; border-radius: 8px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn.active { border-color: #2d7ef7; color: #2d7ef7; }
+        .main-layout { flex: 1; display: flex; overflow: hidden; }
+        .sidebar { width: 280px; background: #252525; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .sidebar-header h3 { font-size: 14px; font-weight: 600; }
+        .add-btn { width: 28px; height: 28px; border: none; background: #2d7ef7; border-radius: 6px; color: white; font-size: 18px; cursor: pointer; }
+        .conversation-list { flex: 1; overflow-y: auto; padding: 12px; }
+        .conv-item { padding: 12px; background: #2d2d2d; border: 1px solid #333; border-radius: 8px; margin-bottom: 8px; opacity: 0.5; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .message { display: flex; gap: 10px; max-width: 85%; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .message.user .message-avatar { background: #2d7ef7; color: white; }
+        .message.assistant .message-avatar { background: #2d2d2d; border: 1px solid #333; }
+        .message-content { background: #2d2d2d; border: 1px solid #333; border-radius: 14px; padding: 14px 18px; max-width: 100%; }
+        .message.user .message-content { background: #2d7ef7; border-color: #2d7ef7; color: white; }
+        .message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px; color: #888; }
+        .message-model { font-size: 10px; padding: 2px 6px; background: #1e1e1e; border: 1px solid #333; border-radius: 3px; }
+        .message-text { white-space: pre-wrap; line-height: 1.6; font-size: 14px; }
+        .message-text pre { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 12px; margin: 8px 0; overflow-x: auto; font-size: 12px; font-family: 'SF Mono', monospace; }
+        .message-text code { font-family: 'SF Mono', monospace; font-size: 12px; background: #1e1e1e; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Tool Panel */
+        .tool-panel { position: absolute; top: 56px; right: 0; bottom: 0; width: 360px; background: #252525; border-left: 1px solid #333; display: flex; flex-direction: column; z-index: 50; box-shadow: -4px 0 20px rgba(0,0,0,0.3); animation: slideInRight 0.2s ease; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #333; background: #252525; }
+        .panel-header h3 { font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .panel-content { flex: 1; overflow-y: auto; padding: 16px; }
+        .setting-item { margin-bottom: 16px; }
+        .setting-item label { display: block; font-size: 12px; font-weight: 500; color: #fff; margin-bottom: 6px; }
+        .setting-item textarea { width: 100%; padding: 8px 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; outline: none; min-height: 120px; resize: vertical; }
+        .setting-item textarea:focus { border-color: #2d7ef7; }
+        .tool-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #333; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; border: none; }
+        .btn-primary { background: #2d7ef7; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1a6de0; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #2d2d2d; border: 1px solid #333; color: #fff; }
+        .btn-secondary:hover { background: #333; border-color: #2d7ef7; }
+        .spin { animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .tool-result { margin-top: 16px; padding-top: 16px; border-top: 1px solid #333; }
+        .tool-result h4 { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; }
+        .result-content { max-height: 300px; overflow-y: auto; }
+        .result-error { background: rgba(239,83,80,0.1); border: 1px solid #ef4444; border-radius: 8px; padding: 12px; color: #ef4444; }
+        .result-error pre { font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+        .result-content-mcp { display: flex; flex-direction: column; gap: 8px; }
+        .result-item { background: #2d2d2d; border: 1px solid #333; border-radius: 8px; padding: 12px; }
+        .result-item.text { border-left: 3px solid #2d7ef7; }
+        .result-item.image { border-left: 3px solid #8b5cf6; }
+        .result-item.resource { border-left: 3px solid #f59e0b; }
+        .result-text { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #fff; }
+        .result-image { text-align: center; }
+        .result-image img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #333; }
+        .result-resource pre { font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+        .result-json pre { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #888; }
+        
+        /* MCP List */
+        .mcp-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .mcp-item { background: #2d2d2d; border: 1px solid #333; border-radius: 10px; overflow: hidden; }
+        .mcp-server-info { padding: 12px; }
+        .mcp-server-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .mcp-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .mcp-status-dot.connected { background: #22c55e; }
+        .mcp-status-dot.disconnected { background: #6b7280; }
+        .mcp-status-dot.error { background: #ef4444; }
+        .mcp-server-name { flex: 1; font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mcp-transport-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+        .mcp-transport-badge.sse { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .mcp-transport-badge.stdio { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .mcp-server-details { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .mcp-server-status { color: #888; }
+        .mcp-tools-count { color: #2d7ef7; font-weight: 500; }
+        .mcp-error { color: #ef4444; font-size: 10px; }
+        .mcp-config-url { color: #888; font-family: monospace; word-break: break-all; }
+        .mcp-config-cmd { color: #888; font-family: monospace; word-break: break-all; }
+        .mcp-server-actions { display: flex; gap: 4px; padding: 8px 12px; border-top: 1px solid #333; background: #252525; }
+        .icon-btn.small { width: 28px; height: 28px; padding: 0; }
+        
+        /* Tool Invocation */
+        .tool-invocation { margin-top: 16px; padding-top: 16px; border-top: 1px solid #333; }
+        .tool-invocation h4 { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; }
+        .tool-invocation textarea { width: 100%; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 12px; color: #fff; min-height: 120px; resize: vertical; }
+        .tool-invocation textarea:focus { border-color: #2d7ef7; outline: none; }
+        .tool-actions { display: flex; gap: 8px; margin-top: 12px; }
+        
+        /* Result rendering */
+        .result-item.text { border-left: 3px solid #2d7ef7; }
+        .result-item.image { border-left: 3px solid #8b5cf6; }
+        .result-item.resource { border-left: 3px solid #f59e0b; }
+        .result-text { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #fff; }
+        .result-image { text-align: center; }
+        .result-image img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #333; }
+        .result-resource pre { font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+        .result-json pre { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">AI</div>
+                <span class="title">AIHub</span>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn active" title="MCP 服務"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"></rect><path d="M7 12h10"></path><path d="M12 7v10"></path></svg></button>
+                <button class="icon-btn" title="設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+        </header>
+        <div class="main-layout">
+            <aside class="sidebar">
+                <div class="sidebar-header"><h3>對話列表</h3><button class="add-btn">+</button></div>
+                <div class="conversation-list">
+                    <div class="conv-item active"><div class="conv-title">MCP 工具調用測試</div><div class="conv-time">今天 16:42</div></div>
+                    <div class="conv-item"><div class="conv-title">Filesystem 操作測試</div><div class="conv-time">今天 15:30</div></div>
+                    <div class="conv-item"><div class="conv-title">GitHub API 測試</div><div class="conv-time">昨天 14:30</div></div>
+                </div>
+            </aside>
+            <main class="chat-area">
+                <div class="messages">
+                    <div class="message user">
+                        <div class="message-avatar">你</div>
+                        <div class="message-content">
+                            <div class="message-header"><span class="message-model">Filesystem Server</span></div>
+                            <div class="message-text">列出 /Users/Documents 目錄下的所有檔案</div>
+                        </div>
+                    </div>
+                    <div class="message assistant">
+                        <div class="message-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-header"><span class="message-model">Filesystem Server</span></div>
+                            <div class="message-text">已調用 list_directory 工具，正在讀取目錄內容...</div>
+                        </div>
+                    </div>
+                    <div class="message assistant">
+                        <div class="message-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-header"><span class="message-model">Filesystem Server</span></div>
+                            <div class="message-text">工具執行成功！發現 15 個檔案/目錄</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Tool Panel (Open) -->
+    <div class="tool-panel">
+        <div class="panel-header">
+            <h3>🔧 調用工具: list_directory</h3>
+            <button class="icon-btn" onclick="document.querySelector('.tool-panel').remove()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div class="panel-content">
+            <div class="setting-item">
+                <label>參數 (JSON)</label>
+                <textarea id="toolArgs" placeholder='{"path": "/Users/Documents"}'>{"path": "/Users/Documents"}</textarea>
+            </div>
+            <div class="tool-actions">
+                <button class="btn btn-primary" onclick="invokeTool()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg> 執行工具</button>
+                <button class="btn btn-secondary" onclick="document.querySelector('.tool-panel').remove()">關閉</button>
+            </div>
+            
+            <div class="tool-result">
+                <h4>結果:</h4>
+                <div class="result-content">
+                    <div class="result-content-mcp">
+                        <div class="result-item text">
+                            <div class="result-text">目錄列表: /Users/Documents
+├── Projects/
+│   ├── ai-hub/
+│   ├── mcp-servers/
+│   └── personal-website/
+├── Documents/
+│   ├── AIHub_架構文件.md
+│   ├── MCP_整合指南.pdf
+│   └── API_金鑰管理.xlsx
+├── Downloads/
+├── Library/
+└── Pictures/
+共 15 個項目 (3 個目錄, 12 個檔案)</div>
+                        </div>
+                        <div class="result-item resource">
+                            <div class="result-resource">
+                                <pre>{"files": 12, "directories": 3, "total_size": "2.4 GB"}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive demo
+        console.log('Tool Panel Demo Ready');
+    </script>
+</body>
+</html>

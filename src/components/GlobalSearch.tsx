@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 import useGlobalSearch from "../hooks/useGlobalSearch";
 import type { GlobalSearchResult } from "../hooks/useGlobalSearch";
@@ -46,10 +46,10 @@ export default function GlobalSearch({
     inputRef.current?.focus();
   }, []);
 
-  const handleSelect = (result: GlobalSearchResult) => {
+  const handleSelect = useCallback((result: GlobalSearchResult) => {
     onSelect(result.type, result.id);
     onClose();
-  };
+  }, [onSelect, onClose]);
 
   // Handle keyboard navigation
   useEffect(() => {

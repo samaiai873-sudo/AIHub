@@ -1,0 +1,16 @@
+{
+  "name": "store-assets",
+  "version": "1.0.0",
+  "description": "| 檔案 | 尺寸 | 用途 | 說明 | |------|------|------|------| | `screenshot-main.html` | 1280x800 | 主要聊天介面 | 展示對話列表、模型選擇、MCP 面板、代碼高亮 | | `screenshot-mcp.html` | 1280x800 | MCP 服務管理 | 展示 SSE/STDIO 雙協定、狀態指示、工具計數、新增/編輯 Modal | | `screenshot-compare.html` | 1280x800 | Compare View | 三模型並行比較、選為最佳、匯出功能 | | `screenshot-tools.html` | 1280x800 | 工具調用面板 | Filesystem 工具調用、JSON 參數、結果渲染 | | `screenshot-settings.html` | 1280x800 | 設定頁面 | API Keys、Ollama/LM Studio 端點、主密碼修改、重置資料 | | `promo-tile-440x280.html` | 440x280 | 商店小圖磚 | 橫幅推廣圖 | | `promo-banner-1400x560.html` | 1400x560 | 商店大橫幅 | 完整功能展示橫幅 |",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "puppeteer": "^25.3.0"
+  }
+}
