@@ -133,6 +133,14 @@ export class MCPClient {
       toolCount: server.tools.length,
     };
   }
+
+  async listTools(serverId) {
+    const server = this.servers.get(serverId);
+    if (!server) {
+      throw new Error(`Server ${serverId} not found`);
+    }
+    return server.tools || [];
+  }
 }
 
 class SSETransport {

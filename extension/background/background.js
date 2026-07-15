@@ -123,6 +123,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
       break;
       
+    case "MCP_UPDATE_SERVER":
+      currentState.mcpServers = currentState.mcpServers.map(s => 
+        s.id === message.id ? message.server : s
+      );
+      saveState();
+      initializeMCP();
+      sendResponse({ success: true });
+      break;
+      
+    case "MCP_TEST_CONNECTION":
+      testMCPConnection(message.server)
+        .then(sendResponse);
+      return true; // async response
+      
     case "MCP_CALL_TOOL":
       callMCPTool(message.serverId, message.toolName, message.args)
         .then(sendResponse);
@@ -162,4 +176,26 @@ async function initializeMCP() {
 async function callMCPTool(serverId, toolName, args) {
   if (!mcpClient) return { error: "MCP not initialized" };
   return mcpClient.callTool(serverId, toolName, args);
+}
+
+async function testMCPConnection(server) {
+  if (!mcpClient) return { error: "MCP not initialized" };
+  
+  try {
+    // Try to connect to the server
+    await mcpClient.connect(server);
+    
+    // Get available tools
+    const tools = await mcpClient.listTools(server.id);
+    
+    return { 
+      success: true, 
+      toolsCount: tools.length,
+      tools: tools.map(t => ({ name: t.name, description: t.description }))
+    };
+  } catch (error) {
+    return { 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
 }
