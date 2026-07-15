@@ -90,6 +90,12 @@ function App() {
     env: '',
   });
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
+  
+  // Tool invocation state
+  const [selectedTool, setSelectedTool] = useState<{ serverId: string; toolName: string } | null>(null);
+  const [toolArgs, setToolArgs] = useState<string>('{}');
+  const [toolResult, setToolResult] = useState<any>(null);
+  const [invokingTool, setInvokingTool] = useState<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -298,6 +304,93 @@ function App() {
     } finally {
       setTestingConnection(null);
     }
+  };
+
+  // Tool invocation handlers
+  const invokeTool = async () => {
+    if (!selectedTool) return;
+    
+    setInvokingTool(selectedTool.toolName);
+    setToolResult(null);
+    
+    let args;
+    try {
+      args = JSON.parse(toolArgs || '{}');
+    } catch (e) {
+      setToolResult({ error: '參數必須是合法的 JSON' });
+      setInvokingTool(null);
+      return;
+    }
+    
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'MCP_STDIO_REQUEST',
+        serverId: selectedTool.serverId,
+        request: {
+          jsonrpc: '2.0',
+          id: Date.now(),
+          method: 'tools/call',
+          params: {
+            name: selectedTool.toolName,
+            arguments: args
+          }
+        }
+      });
+      
+      setToolResult(response);
+    } catch (error) {
+      setToolResult({ error: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setInvokingTool(null);
+    }
+  };
+
+  const renderToolResult = (result: any) => {
+    if (!result) return null;
+    
+    if (result.error) {
+      return (
+        <div className="result-error">
+          <span className="error-icon">❌</span>
+          <pre>{result.error}</pre>
+        </div>
+      );
+    }
+    
+    // Handle MCP tools/call response format
+    if (result.content) {
+      return (
+        <div className="result-content-mcp">
+          {result.content.map((item: any, index: number) => (
+            <div key={index} className={`result-item ${item.type || 'text'}`}>
+              {item.type === 'text' && (
+                <pre className="result-text">{item.text}</pre>
+              )}
+              {item.type === 'image' && (
+                <div className="result-image">
+                  <img src={item.data} alt={item.mimeType || 'image'} />
+                </div>
+              )}
+              {item.type === 'resource' && (
+                <div className="result-resource">
+                  <pre>{JSON.stringify(item.resource, null, 2)}</pre>
+                </div>
+              )}
+              {!item.type && (
+                <pre>{JSON.stringify(item, null, 2)}</pre>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    // Generic JSON result
+    return (
+      <div className="result-json">
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+      </div>
+    );
   };
 
   const getStatusIcon = (status?: string) => {
@@ -521,8 +614,8 @@ function App() {
                         <div className="mcp-server-header">
                           <span className="mcp-status-dot" style={{ 
                             backgroundColor: s.status === 'connected' ? '#22c55e' : 
-                                           s.status === 'connecting' ? '#eab308' : 
-                                           s.status === 'error' ? '#ef4444' : '#6b7280' 
+                                         s.status === 'connecting' ? '#eab308' : 
+                                         s.status === 'error' ? '#ef4444' : '#6b7280' 
                           }}></span>
                           <span className="mcp-server-name">{s.name}</span>
                           <span className={`mcp-transport-badge ${s.transport}`}>{s.transport.toUpperCase()}</span>
@@ -573,10 +666,77 @@ function App() {
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                           </svg>
                         </button>
+                        <button 
+                          onClick={() => {
+                            setSelectedTool({ serverId: s.id, toolName: 'list_tools' });
+                            setToolArgs('{}');
+                          }} 
+                          className="icon-btn"
+                          title="瀏覽工具"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                          </svg>
+                        </button>
                       </div>
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* Tool Invocation Panel */}
+        {selectedTool && (
+          <aside className="tool-panel">
+            <div className="panel-header">
+              <h3>🔧 調用工具: {selectedTool.toolName}</h3>
+              <button onClick={() => { setSelectedTool(null); setToolResult(null); }} className="icon-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="panel-content">
+              <div className="setting-item">
+                <label>參數 (JSON)</label>
+                <textarea
+                  value={toolArgs}
+                  onChange={e => setToolArgs(e.target.value)}
+                  placeholder='{"param1": "value1", "param2": "value2"}'
+                  rows={6}
+                  style={{fontFamily: 'monospace', fontSize: '12px', width: '100%', minHeight: '120px'}}
+                />
+              </div>
+              <div className="tool-actions">
+                <button 
+                  onClick={invokeTool}
+                  disabled={invokingTool === selectedTool.toolName}
+                  className="btn btn-primary"
+                >
+                  {invokingTool === selectedTool.toolName ? (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="spin">
+                        <circle cx="12" cy="12" r="10" strokeOpacity="0.25"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10"></path>
+                      </svg>
+                      執行中...
+                    </>
+                  ) : '執行工具'}
+                </button>
+                <button onClick={() => { setSelectedTool(null); setToolResult(null); }} className="btn btn-secondary">關閉</button>
+              </div>
+              
+              {toolResult && (
+                <div className="tool-result">
+                  <h4>結果:</h4>
+                  <div className="result-content">
+                    {renderToolResult(toolResult)}
+                  </div>
+                </div>
               )}
             </div>
           </aside>
