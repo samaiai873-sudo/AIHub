@@ -4,7 +4,7 @@ import type { Platform } from "./platforms";
 export const DEFAULT_MODELS: Record<Platform, string> = {
   chatgpt: "gpt-4o",
   claude: "sonnet-3.5",
-  gemini: "gemini-1.5-flash",
+  gemini: "gemini-flash-latest",
   grok: "grok-4",
   perplexity: "sonar",
   copilot: "copilot",
@@ -19,7 +19,12 @@ export const GLOBAL_DEFAULT_MODEL = "gpt-4o";
 export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
   chatgpt: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
   claude: ["sonnet-3.5", "haiku-3.5", "opus-3"],
-  gemini: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"],
+  gemini: [
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+  ],
   grok: ["grok-4"],
   perplexity: ["sonar"],
   copilot: ["copilot"],

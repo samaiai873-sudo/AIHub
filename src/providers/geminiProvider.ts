@@ -8,9 +8,10 @@ function endpointFor(apiModel: string, streaming: boolean) {
 
 // UI 層 model id（見 constants/models.ts）→ 真正呼叫 Gemini API 用的 model 字串
 const API_MODEL_MAP: Record<string, string> = {
-  "gemini-1.5-pro": "gemini-1.5-pro",
-  "gemini-1.5-flash": "gemini-1.5-flash",
-  "gemini-1.0-pro": "gemini-1.0-pro",
+  "gemini-flash-latest": "gemini-flash-latest",
+  "gemini-pro-latest": "gemini-pro-latest",
+  "gemini-2.5-flash": "gemini-2.5-flash",
+  "gemini-2.5-pro": "gemini-2.5-pro",
 };
 
 function resolveApiModel(model: string): string {
@@ -21,7 +22,7 @@ export const geminiProvider: AIProvider = {
   id: "gemini",
   name: "Gemini",
   supportsStreaming: true,
-  defaultModel: "gemini-1.5-pro",
+  defaultModel: "gemini-flash-latest",
 
   async sendMessage({ model, prompt, apiKey, onChunk }) {
     if (!apiKey) {
