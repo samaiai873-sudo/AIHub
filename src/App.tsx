@@ -9,7 +9,7 @@ import ResetAllData from "./components/ResetAllData";
 import FirstTimeSetup from "./components/FirstTimeSetup";
 import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
-import { useConversationContext } from "./context/ConversationContext";
+import { useConversationContext } from "./context/useConversationContext";
 import usePrompts from "./hooks/usePrompts";
 
 export default function App() {

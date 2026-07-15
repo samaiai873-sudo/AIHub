@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Message } from "../types/conversation";
 import { aiPlatforms } from "../data/aiPlatforms";
-import { useConversationContext } from "../context/ConversationContext";
+import { useConversationContext } from "../context/useConversationContext";
 
 type MessageBubbleProps = {
   message: Message;

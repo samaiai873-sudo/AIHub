@@ -1,5 +1,5 @@
 import { aiPlatforms } from "../data/aiPlatforms";
-import { useAgentContext } from "../context/AgentContext";
+import { useAgentContext } from "../context/useAgentContext";
 
 export default function AIAgentManager() {
   const {

@@ -1,15 +1,9 @@
-import {
-  createContext,
-  useContext,
-  type ReactNode,
-} from "react";
-
+import { createContext, type ReactNode } from "react";
 import useAgents from "../hooks/useAgents";
 
 type AgentContextType = ReturnType<typeof useAgents>;
 
-const AgentContext =
-  createContext<AgentContextType | null>(null);
+const AgentContext = createContext<AgentContextType | null>(null);
 
 export function AgentProvider({
   children,
@@ -25,14 +19,4 @@ export function AgentProvider({
   );
 }
 
-export function useAgentContext() {
-  const context = useContext(AgentContext);
-
-  if (!context) {
-    throw new Error(
-      "useAgentContext 必須在 AgentProvider 內使用"
-    );
-  }
-
-  return context;
-}
+export { AgentContext };

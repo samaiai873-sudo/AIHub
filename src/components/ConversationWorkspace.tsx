@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 
 import useAppSettings from "../hooks/useAppSettings";
 import useApiKeys from "../hooks/useApiKeys";
-import { useConversationContext } from "../context/ConversationContext";
+import { useConversationContext } from "../context/useConversationContext";
 import { generateAssistantReply } from "../providers";
 import { aiPlatforms } from "../data/aiPlatforms";
 import { runOpenInBrowserWorkflow } from "../utils/browserWorkflow";

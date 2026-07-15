@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { aiPlatforms } from "../data/aiPlatforms";
-import { useAgentContext } from "../context/AgentContext";
+import { useAgentContext } from "../context/useAgentContext";
 
 type PromptFormProps = {
   value: string;
