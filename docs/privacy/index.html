@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIHub 隱私權政策</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.7;
+            color: #1a1a2e;
+            background: #f8f9fa;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 60px;
+        }
+        header {
+            text-align: center;
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        .logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #2d7ef7, #6366f1);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 28px;
+            color: white;
+        }
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        .meta {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 40px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 28px 0 12px;
+        }
+        h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            margin: 20px 0 8px;
+        }
+        p {
+            margin-bottom: 16px;
+            color: #374151;
+        }
+        ul, ol {
+            margin: 16px 0 16px 24px;
+        }
+        li {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        td {
+            color: #4b5563;
+        }
+        tr:hover td {
+            background: #f9fafb;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-required { background: #fee2e2; color: #dc2626; }
+        .badge-optional { background: #e0e7ff; color: #4f46e5; }
+        .badge-local { background: #dcfce7; color: #16a34a; }
+        .badge-encrypted { background: #fef3c7; color: #d97706; }
+        .highlight-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .highlight-box.warning {
+            background: #fef3c7;
+            border-color: #fcd34d;
+        }
+        .highlight-box.success {
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+        .highlight-box strong { color: #1a1a2e; }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+        }
+        pre {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        a {
+            color: #2d7ef7;
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e8e8e8;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 20px 0;
+        }
+        .contact-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .contact-links a:hover {
+            background: #2d7ef7;
+            color: white;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 18px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AI</div>
+            <h1>AIHub 隱私權政策</h1>
+            <p class="meta">最後更新：2025年7月15日 | 版本 1.0.0</p>
+        </header>
+
+        <section>
+            <h2>1. 簡介</h2>
+            <p>歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Ollama、LM Studio 等多種 AI 提供商，並整合 Model Context Protocol (MCP) 以支援本地工具調用。</p>
+            <p>本隱私權政策說明我們如何收集、使用、儲存和保護您的資料。使用本擴充功能即表示您同意本政策的條款。</p>
+        </section>
+
+        <section>
+            <h2>2. 資料收集與使用</h2>
+            
+            <h3>2.1 我們<b>不</b>收集的資料</h3>
+            <div class="highlight-box success">
+                <strong>✅ 零資料收集承諾：</strong> 本擴充功能完全在本地運行，沒有後端伺服器，不會收集任何可識別您身分的資料。
+            </div>
+            <ul>
+                <li>❌ <strong>不收集</strong> 個人身分資訊 (姓名、電子郵件、電話等)</li>
+                <li>❌ <strong>不收集</strong> 聊天內容、提示詞、AI 回覆</li>
+                <li>❌ <strong>不收集</strong> API 金鑰內容</li>
+                <li>❌ <strong>不收集</strong> 瀏覽歷史、Cookies、網站資料</li>
+                <li>❌ <strong>不傳送</strong> 任何資料到我們的伺服器 (我們沒有伺服器)</li>
+                <li>❌ <strong>不使用</strong> 追蹤器、分析工具、廣告 ID</li>
+            </ul>
+
+            <h3>2.2 本地儲存的資料 (僅存在您的裝置)</h3>
+            <p>以下資料<strong>僅儲存在您的瀏覽器本地</strong> (<code>chrome.storage.local</code>)：</p>
+            <table>
+                <thead>
+                    <tr><th>資料類型</th><th>用途</th><th>加密狀態</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>API 金鑰</td><td>調用 AI 提供商 API</td><td><span class="badge badge-encrypted">AES-GCM + PBKDF2 加密</span></td></tr>
+                    <tr><td>對話歷史</td><td>顯示歷史聊天記錄</td><td><span class="badge badge-encrypted">加密</span></td></tr>
+                    <tr><td>設定偏好</td><td>模型選擇、主題、語言等</td><td><span class="badge badge-encrypted">加密</span></td></tr>
+                    <tr><td>MCP 伺服器配置</td><td>連線本地工具伺服器</td><td><span class="badge badge-encrypted">加密</span></td></tr>
+                    <tr><td>主密碼驗證資訊</td><td>解鎖加密儲存</td><td><span class="badge badge-encrypted">PBKDF2 (100,000 迭代)</span></td></tr>
+                </tbody>
+            </table>
+
+            <h3>2.3 網路請求說明</h3>
+            <p>本擴充功能會發起以下網路請求，<strong>僅直接連線至您選擇的 AI 提供商</strong>：</p>
+            <table>
+                <thead>
+                    <tr><th>目標</th><th>用途</th><th>資料傳輸</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>api.openai.com</code></td><td>ChatGPT API</td><td>您的提示詞 + API Key (標頭)</td></tr>
+                    <tr><td><code>api.anthropic.com</code></td><td>Claude API</td><td>您的提示詞 + API Key (標頭)</td></tr>
+                    <tr><td><code>generativelanguage.googleapis.com</code></td><td>Gemini API</td><td>您的提示詞 + API Key (查詢參數)</td></tr>
+                    <tr><td><code>localhost:11434</code></td><td>Ollama 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
+                    <tr><td><code>localhost:1234</code></td><td>LM Studio 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
+                    <tr><td>您設定的 MCP SSE 端點</td><td>MCP 伺服器連線</td><td>工具調用參數/結果</td></tr>
+                </tbody>
+            </table>
+            <div class="highlight-box">
+                <strong>重要</strong>：所有 API 金鑰<strong>永不離開您的瀏覽器</strong>，我們無法存取、查看或記錄您的金鑰。
+            </div>
+        </section>
+
+        <section>
+            <h2>3. 資料安全</h2>
+            
+            <h3>3.1 加密機制</h3>
+            <ul>
+                <li><strong>演算法</strong>：AES-GCM (256-bit 金鑰)</li>
+                <li><strong>金鑰衍生</strong>：PBKDF2 (SHA-256, 100,000 次迭代)</li>
+                <li><strong>鹽值</strong>：每筆資料獨立隨機產生 (16 bytes)</li>
+                <li><strong>初始向量</strong>：每次加密獨立隨機產生 (12 bytes)</li>
+                <li><strong>裝置綁定</strong>：金鑰衍生包含瀏覽器指紋 (User Agent + 螢幕解析度 + 時區 + 語言)</li>
+            </ul>
+
+            <h3>3.2 主密碼保護</h3>
+            <ul>
+                <li>首次使用需設定主密碼 (最少 8 字元)</li>
+                <li>主密碼<strong>不儲存</strong>，僅在記憶體中驗證</li>
+                <li>支援修改主密碼 (需驗證舊密碼)</li>
+                <li>忘記密碼可透過「重置所有資料」功能清除 (需輸入確認文字)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>4. 權限說明</h2>
+            <table>
+                <thead>
+                    <tr><th>權限</th><th>必要性</th><th>用途說明</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>sidePanel</code></td><td><span class="badge badge-required">必要</span></td><td>提供側邊欄聊天介面</td></tr>
+                    <tr><td><code>storage</code></td><td><span class="badge badge-required">必要</span></td><td>本地加密儲存設定與歷史</td></tr>
+                    <tr><td><code>activeTab</code></td><td><span class="badge badge-required">必要</span></td><td>右鍵選單分析當前頁面選取文字</td></tr>
+                    <tr><td><code>scripting</code></td><td><span class="badge badge-required">必要</span></td><td>注入內容腳本取得選取文字</td></tr>
+                    <tr><td><code>contextMenus</code></td><td><span class="badge badge-required">必要</span></td><td>建立右鍵選單 (分析/總結/翻譯)</td></tr>
+                    <tr><td><code>tabs</code></td><td><span class="badge badge-required">必要</span></td><td>快捷鍵開啟面板、取得頁面標題/網址</td></tr>
+                    <tr><td><code>nativeMessaging</code></td><td><span class="badge badge-optional">選用</span></td><td>MCP STDIO 連線本地伺服器</td></tr>
+                    <tr><td><code>host_permissions: <all_urls></code></td><td><span class="badge badge-required">必要</span></td><td>直接呼叫各 AI 提供商 API 端點</td></tr>
+                </tbody>
+            </table>
+            <div class="highlight-box warning">
+                <strong>注意</strong>：<code>host_permissions: <all_urls></code> 僅用於直接連線 AI API 端點，我們<strong>不</strong>存取、讀取或修改您瀏覽的網頁內容。
+            </div>
+        </section>
+
+        <section>
+            <h2>5. 本地模型支援 (Ollama / LM Studio)</h2>
+            <ul>
+                <li>連線至 <code>http://localhost:11434</code> (Ollama) 或 <code>http://localhost:1234</code> (LM Studio)</li>
+                <li><strong>完全離線運作</strong>，無任何資料傳送至外部伺服器</li>
+                <li>模型列表從本地 API 取得 (<code>/api/tags</code> 或 <code>/v1/models</code>)</li>
+                <li>無需註冊帳號、無需 API 金鑰</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>6. MCP (Model Context Protocol) 整合</h2>
+            <ul>
+                <li>支援 <strong>SSE</strong> (Server-Sent Events) 遠端伺服器</li>
+                <li>支援 <strong>STDIO</strong> (標準輸入/輸出) 本地進程 (透過 Native Messaging Host)</li>
+                <li>工具調用參數與結果<strong>僅在您的裝置處理</strong></li>
+                <li>Native Messaging Host 為開源 Python 腳本，可自行審核編譯</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>7. 資料保留與刪除</h2>
+            <table>
+                <thead>
+                    <tr><th>操作</th><th>結果</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>刪除對話</td><td>僅移除該對話，其他資料保留</td></tr>
+                    <tr><td>修改主密碼</td><td>重新加密所有資料 (不遺失資料)</td></tr>
+                    <tr><td>重置所有資料</td><td><strong>永久清除</strong> 所有本地儲存 (需輸入「RESET ALL DATA」確認)</td></tr>
+                    <tr><td>移除擴充功能</td><td>瀏覽器自動清除 <code>chrome.storage.local</code> 所有資料</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>8. 兒童隱私</h2>
+            <p>本擴充功能不針對 13 歲以下兒童設計，不會主動收集兒童個人資料。</p>
+        </section>
+
+        <section>
+            <h2>9. 國際資料傳輸</h2>
+            <p>您的資料<strong>不會</strong>傳輸至我們的伺服器。AI API 呼叫直接連線至各提供商位於美國/全球的伺服器，請參閱各提供商隱私權政策：</p>
+            <ul>
+                <li><a href="https://openai.com/policies/privacy-policy" target="_blank">OpenAI Privacy Policy</a></li>
+                <li><a href="https://www.anthropic.com/legal/privacy" target="_blank">Anthropic Privacy Policy</a></li>
+                <li><a href="https://policies.google.com/privacy" target="_blank">Google Privacy Policy</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>10. 您的權利</h2>
+            <p>依據 GDPR、CCPA 及相關法規，您擁有：</p>
+            <ul>
+                <li>✅ <strong>存取權</strong>：檢視本地儲存的所有資料 (開發者工具 → Application → Local Storage)</li>
+                <li>✅ <strong>更正權</strong>：隨時修改設定、API 金鑰</li>
+                <li>✅ <strong>刪除權</strong>：使用「重置所有資料」功能</li>
+                <li>✅ <strong>可攜權</strong>：匯出對話歷史 (JSON 格式)</li>
+                <li>✅ <strong>限制處理</strong>：停用擴充功能即停止所有處理</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>11. 開源透明化</h2>
+            <ul>
+                <li><strong>原始碼</strong>：<a href="https://github.com/samaiai873-sudo/AIHub" target="_blank">GitHub - samaiai873-sudo/AIHub</a></li>
+                <li><strong>授權</strong>：MIT License</li>
+                <li><strong>Native Messaging Host</strong>：<code>extension/native-host/aihub_native_host.py</code> (可自行編譯驗證)</li>
+            </ul>
+            <p>歡迎提交 Issue、PR 或進行安全性審計。</p>
+        </section>
+
+        <section>
+            <h2>12. 政策變更</h2>
+            <p>本政策如有變更，將在擴充功能更新時通知您，並更新「最後更新日期」。重大變更將要求您重新確認同意。</p>
+        </section>
+
+        <section>
+            <h2>13. 聯絡我們</h2>
+            <div class="contact-links">
+                <a href="https://github.com/samaiai873-sudo/AIHub/issues" target="_blank">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    GitHub Issues
+                </a>
+                <a href="mailto:privacy@aihub.example.com">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                    Email Us
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <h2>14. 免責聲明</h2>
+            <div class="highlight-box">
+                <p>本擴充功能按「現狀」提供，不保證不中斷、無錯誤或完全安全。使用 AI 服務時請注意：</p>
+                <ul>
+                    <li>請勿輸入敏感個人資料 (身分證字號、信用卡號、密碼等)</li>
+                    <li>AI 回覆可能包含錯誤資訊，請自行驗證</li>
+                    <li>本地模型品質取決於您的硬體與模型選擇</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>本隱私權政策採用繁體中文 (台灣) 撰寫，如有翻譯差異以中文版為準。</        <p>&copy; 2025 AIHub. 開源專案，採用 MIT License.</p>
+        </footer>
+    </div>
+</body>
+</html>
