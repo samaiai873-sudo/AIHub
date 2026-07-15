@@ -47,7 +47,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "@gemini",
     patternType: "prefix",
     targetPlatform: "gemini",
-    targetModel: "gemini-1.5-pro",
+    targetModel: "gemini-pro-latest",
     description: "以 @gemini 開頭 → 導向 Gemini 搜尋/長文本",
   },
   {
@@ -77,7 +77,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "/search",
     patternType: "prefix",
     targetPlatform: "gemini",
-    targetModel: "gemini-1.5-pro",
+    targetModel: "gemini-pro-latest",
     description: "以 /search 開頭 → 導向 Gemini 搜尋",
   },
   {
@@ -107,7 +107,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "搜尋|查詢|最新|新聞|current|latest|news|搜索",
     patternType: "keyword",
     targetPlatform: "gemini",
-    targetModel: "gemini-1.5-pro",
+    targetModel: "gemini-pro-latest",
     description: "含搜尋關鍵字 → 導向 Gemini",
   },
 ];
