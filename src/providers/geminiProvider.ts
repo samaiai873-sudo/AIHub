@@ -3,6 +3,7 @@ import { createFallbackReply } from "./utils";
 
 function endpointFor(apiModel: string, streaming: boolean) {
   const action = streaming ? "streamGenerateContent" : "generateContent";
+  // 串流時加 alt=sse，確保回傳 SSE 格式（data: {...}），而非 JSON 陣列
   return `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:${action}`;
 }
 
@@ -44,7 +45,11 @@ export const geminiProvider: AIProvider = {
     const isStreaming = typeof callback === "function";
 
     try {
-      const response = await fetch(`${endpointFor(apiModel, isStreaming)}?key=${apiKey}`, {
+      const url = isStreaming
+        ? `${endpointFor(apiModel, true)}?key=${apiKey}&alt=sse`
+        : `${endpointFor(apiModel, false)}?key=${apiKey}`;
+
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,10 +101,12 @@ export const geminiProvider: AIProvider = {
 
         for (const line of lines) {
           const trimmed = line.trim();
-          if (!trimmed) continue;
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
 
           try {
-            const chunk = JSON.parse(trimmed);
+            const jsonStr = trimmed.replace(/^data:\s*/, "");
+            if (jsonStr === "[DONE]") continue;
+            const chunk = JSON.parse(jsonStr);
             const deltaText = chunk.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
             if (deltaText) {
               messageContent += deltaText;
@@ -113,15 +120,21 @@ export const geminiProvider: AIProvider = {
 
       // 處理剩餘 buffer
       if (buffer.trim()) {
-        try {
-          const chunk = JSON.parse(buffer.trim());
-          const deltaText = chunk.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-          if (deltaText) {
-            messageContent += deltaText;
-            callback?.(messageContent);
+        const trimmed = buffer.trim();
+        if (trimmed.startsWith("data:")) {
+          try {
+            const jsonStr = trimmed.replace(/^data:\s*/, "");
+            if (jsonStr && jsonStr !== "[DONE]") {
+              const chunk = JSON.parse(jsonStr);
+              const deltaText = chunk.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+              if (deltaText) {
+                messageContent += deltaText;
+                callback?.(messageContent);
+              }
+            }
+          } catch {
+            // 忽略
           }
-        } catch {
-          // 忽略
         }
       }
 
