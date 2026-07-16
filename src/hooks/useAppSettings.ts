@@ -3,6 +3,15 @@ import type { Platform } from "../constants/platforms";
 import type { RoutingRule } from "../constants/routing";
 import { DEFAULT_ROUTING_RULES } from "../constants/routing";
 
+export type CustomModel = {
+  id: string;
+  name: string;
+  platform: string; // "custom" or actual platform name
+  endpoint: string; // API endpoint
+  modelId: string; // actual model ID in the API
+  apiKey?: string; // optional, can use default or specific key
+};
+
 export type WorkspaceSettings = {
   showSearchPreview: boolean;
   groupByProject: boolean;
@@ -10,6 +19,8 @@ export type WorkspaceSettings = {
   lastUsedPlatform: Platform | null;
   /** Sprint 9: Conversation Routing 規則 */
   routingRules: RoutingRule[];
+  /** 自訂模型列表 */
+  customModels: CustomModel[];
 };
 
 const defaultSettings: WorkspaceSettings = {
@@ -17,6 +28,7 @@ const defaultSettings: WorkspaceSettings = {
   groupByProject: true,
   lastUsedPlatform: null,
   routingRules: DEFAULT_ROUTING_RULES,
+  customModels: [],
 };
 
 export default function useAppSettings() {
@@ -59,6 +71,27 @@ export default function useAppSettings() {
     });
   };
 
+  // Custom Models 管理
+  const addCustomModel = (model: CustomModel) => {
+    updateSettings({
+      customModels: [...settings.customModels, { ...model, id: crypto.randomUUID() }],
+    });
+  };
+
+  const removeCustomModel = (id: string) => {
+    updateSettings({
+      customModels: settings.customModels.filter((m) => m.id !== id),
+    });
+  };
+
+  const updateCustomModel = (id: string, updates: Partial<CustomModel>) => {
+    updateSettings({
+      customModels: settings.customModels.map((m) =>
+        m.id === id ? { ...m, ...updates } : m
+      ),
+    });
+  };
+
   return {
     settings,
     updateSettings,
@@ -67,5 +100,9 @@ export default function useAppSettings() {
     addRoutingRule,
     removeRoutingRule,
     toggleRoutingRule,
+    // Custom Models
+    addCustomModel,
+    removeCustomModel,
+    updateCustomModel,
   };
 }

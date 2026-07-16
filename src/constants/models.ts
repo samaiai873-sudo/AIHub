@@ -10,6 +10,7 @@ export const DEFAULT_MODELS: Record<Platform, string> = {
   copilot: "copilot",
   ollama: "llama3.1",
   lmstudio: "local-model",
+  nvidia: "nemotron-3-ultra",
 };
 
 // 全域預設模型（當無法決定時使用）
@@ -30,6 +31,7 @@ export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
   copilot: ["copilot"],
   ollama: ["llama3.1", "llama3.2", "qwen2.5", "mistral", "codellama"],
   lmstudio: ["local-model"],
+  nvidia: ["nemotron-3-ultra", "nemotron-4-340b", "nemotron-3-8b"],
 } as const;
 
 // 取得平台的預設模型

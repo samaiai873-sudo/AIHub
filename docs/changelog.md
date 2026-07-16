@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-07-16
+
+### 🔧 Fixed
+- **Gemini API model names**: Updated deprecated `gemini-1.5-flash`/`gemini-1.5-pro` to `gemini-3.5-flash`/`gemini-2.5-pro`
+- **Cross-platform model contamination**: `normalizeConversation` now validates model belongs to target platform
+- **handleSend model validation**: Composer-passed model validated before API call
+- **regenerateWith model validation**: "Reply with..." model now validated against platform
+
+### ✨ Added
+- NVIDIA Nemotron provider support
+- Custom Models management in settings
+
+### 📝 Documentation
+- handoff.md, changelog.md, sprint-history.md, roadmap.md synced
+
 ## [1.0.0] - 2026-07-15
 
 ### 🔐 Security - Major Architecture Change

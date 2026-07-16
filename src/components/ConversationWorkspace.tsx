@@ -5,7 +5,6 @@ import useApiKeys from "../hooks/useApiKeys";
 import { useConversationContext } from "../context/useConversationContext";
 import { generateAssistantReply } from "../providers";
 import { aiPlatforms } from "../data/aiPlatforms";
-import { runOpenInBrowserWorkflow } from "../utils/browserWorkflow";
 import {
   exportToMarkdown,
   exportToJSON,
@@ -22,13 +21,13 @@ import Composer from "./Composer";
 import CompareView from "./CompareView";
 
 export default function ConversationWorkspace() {
-  const [showExportMenu, setShowExportMenu] =
-    useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   // Sprint 10: Compare Responses
   const [showCompareView, setShowCompareView] = useState(false);
   const [comparePrompt, setComparePrompt] = useState("");
   const [compareModels, setCompareModels] = useState<{ platform: string; model: string }[]>([]);
+
   const {
     conversations,
     currentConversation,
@@ -163,35 +162,6 @@ export default function ConversationWorkspace() {
       reply.content,
       isError ? "error" : "assistant"
     );
-  };
-
-  const handleOpenInBrowser = async (content: string) => {
-    if (!currentConversation) return;
-
-    const platform = currentConversation.platform;
-
-    // 先把 Prompt 記錄成一則 user message，即使沒有走 API 也留下歷史紀錄
-    addMessage(currentConversation.id, {
-      role: "user",
-      platform: "user",
-      model: "",
-      content,
-    });
-
-    setLastUsedPlatform(platform);
-
-    const { copied, opened } = await runOpenInBrowserWorkflow(
-      platform,
-      content
-    );
-
-    if (!opened) {
-      showToast("⚠️ 找不到這個平台的官網網址");
-    } else if (copied) {
-      showToast("✅ Prompt 已複製到剪貼簿，貼上即可送出");
-    } else {
-      showToast("已開啟官網，但複製剪貼簿失敗，請手動複製 Prompt");
-    }
   };
 
   return (
@@ -459,78 +429,63 @@ export default function ConversationWorkspace() {
             </div>
           )}
         </div>
-
-        {showExportMenu && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 99,
-            }}
-            onClick={() => setShowExportMenu(false)}
-          />
-        )}
-
-        <MessageList
-          messages={
-            currentConversation?.messages ?? []
-          }
-        />
-
-        {currentConversation ? (
-          <Composer
-            onSend={handleSend}
-            onOpenInBrowser={handleOpenInBrowser}
-            isFreeMode={!apiKeys[currentConversation.platform]}
-            defaultPlatform={currentConversation.platform}
-            defaultModel={currentConversation.model}
-          />
-        ) : (
-          <div
-            style={{
-              padding: 20,
-              textAlign: "center",
-              color: "#888",
-              borderTop: "1px solid #333",
-            }}
-          >
-            點擊左側「＋ New Conversation」開始聊天。
-          </div>
-        )}
-
-        {toast && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 90,
-              left: "50%",
-              transform: "translateX(-50%)",
-              background: "#2b2b2b",
-              border: "1px solid #555",
-              borderRadius: 8,
-              padding: "10px 16px",
-              fontSize: 14,
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-              zIndex: 200,
-            }}
-          >
-            {toast}
-          </div>
-        )}
-
-        {/* Compare View Modal */}
-        {showCompareView && (
-          <CompareView
-            prompt={comparePrompt}
-            selectedModels={compareModels}
-            onClose={() => setShowCompareView(false)}
-            onPickWinner={handleComparePickWinner}
-          />
-        )}
       </div>
+
+      <MessageList
+        messages={
+          currentConversation?.messages ?? []
+        }
+      />
+
+      {currentConversation ? (
+        <Composer
+          onSend={handleSend}
+          isFreeMode={!apiKeys[currentConversation.platform]}
+          defaultPlatform={currentConversation.platform}
+          defaultModel={currentConversation.model}
+        />
+      ) : (
+        <div
+          style={{
+            padding: 20,
+            textAlign: "center",
+            color: "#888",
+            borderTop: "1px solid #333",
+          }}
+        >
+          點擊左側「＋ New Conversation」開始聊天。
+        </div>
+      )}
+
+      {toast && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 90,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#2b2b2b",
+            border: "1px solid #555",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 14,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            zIndex: 200,
+          }}
+        >
+          {toast}
+        </div>
+      )}
+
+      {/* Compare View Modal */}
+      {showCompareView && (
+        <CompareView
+          prompt={comparePrompt}
+          selectedModels={compareModels}
+          onClose={() => setShowCompareView(false)}
+          onPickWinner={handleComparePickWinner}
+        />
+      )}
     </div>
   );
 }

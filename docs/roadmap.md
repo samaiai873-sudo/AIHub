@@ -67,6 +67,15 @@
 | 單元測試 + CI/CD | ✅ 完成 | Sprint 12 |
 | 隱私權政策 | ✅ 完成 | GitHub Pages 就緒 |
 | Chrome Web Store 發布套件 | ✅ 完成 | store-assets/ 目錄就緒 |
+## Sprint 13（已完成 ✅）- v1.0.1
+
+| 項目 | 狀態 | 備註 |
+|------|------|------|
+| Gemini API 模型名稱更新 | ✅ 完成 | gemini-1.5-flash → gemini-3.5-flash |
+| Cross-platform 模型汙染修復 | ✅ 完成 | normalizeConversation 加入驗證 |
+| NVIDIA Nemotron Provider | ✅ 完成 | 3 個模型支援 |
+| Custom Models 管理 | ✅ 完成 | Settings UI 支援 |
+
 
 ---
 

@@ -443,6 +443,13 @@ npm run build        # 輸出到 dist/
 - ✅ 更新 `src/hooks/useApiKeys.ts` 移除 `reEncryptApiKeys`
 - ✅ 更新 `src/hooks/useSecureLocalStorage.ts` 移除密碼參數
 - ✅ Chrome Web Store 發布套件完整準備
+### v1.0.1 (2026-07-16)
+- ✅ 修復 Gemini API 模型名稱過期（gemini-1.5-flash → gemini-3.5-flash）
+- ✅ 修復 localStorage 模型跨平台汙染（normalizeConversation model 驗證）
+- ✅ 修復 handleSend、regenerateWith 模型驗證缺失
+- ✅ 新增 NVIDIA Nemotron Provider 支援
+- ✅ 更新 docs/ 文件同步
+
 
 ---
 

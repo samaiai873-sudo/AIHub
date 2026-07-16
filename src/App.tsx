@@ -7,6 +7,7 @@ import ConversationWorkspace from "./components/ConversationWorkspace";
 import GlobalSearch from "./components/GlobalSearch";
 import ResetAllData from "./components/ResetAllData";
 import FirstTimeSetup from "./components/FirstTimeSetup";
+import CustomModels from "./components/CustomModels";
 import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
 import { useConversationContext } from "./context/useConversationContext";
@@ -202,6 +203,7 @@ export default function App() {
                 { id: "chatgpt", label: "OpenAI / ChatGPT" },
                 { id: "claude", label: "Anthropic / Claude" },
                 { id: "gemini", label: "Google / Gemini" },
+                { id: "nvidia", label: "NVIDIA Nemotron" },
               ].map((provider) => (
                 <div
                   key={provider.id}
@@ -255,6 +257,61 @@ export default function App() {
                   </button>
                 </div>
               ))}
+
+              {/* Local Providers (Ollama / LM Studio) - No API Key needed, but configurable endpoints */}
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #333" }}>
+                <h4 style={{ marginTop: 0, marginBottom: 12, color: "#8bc98b" }}>
+                  🏠 本地模型設定 (無需 API Key)
+                </h4>
+                <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
+                  本地模型不需要 API Key，但需確保本地服務正在運行
+                </p>
+
+                {[
+                  { id: "ollama", label: "Ollama", defaultUrl: "http://localhost:11434", key: "ollama-base-url" },
+                  { id: "lmstudio", label: "LM Studio", defaultUrl: "http://localhost:1234/v1", key: "lmstudio-base-url" },
+                ].map((provider) => (
+                  <div key={provider.id} style={{ marginBottom: 12 }}>
+                    <div style={{ marginBottom: 6, fontWeight: 600 }}>
+                      {provider.label} 服務位址
+                    </div>
+                    <input
+                      type="text"
+                      value={apiKeys[provider.key] ?? provider.defaultUrl}
+                      onChange={(event) =>
+                        updateApiKey(provider.key, event.target.value)
+                      }
+                      placeholder={`輸入 ${provider.label} 服務位址 (預設: ${provider.defaultUrl})`}
+                      style={{
+                        width: "100%",
+                        padding: 10,
+                        borderRadius: 8,
+                        border: "1px solid #555",
+                        boxSizing: "border-box",
+                        marginBottom: 6,
+                        fontSize: 13,
+                        fontFamily: "monospace",
+                      }}
+                    />
+                    <div style={{ color: "#888", fontSize: 12 }}>
+                      需先啟動 {provider.label} 服務: <code style={{ color: "#8bc98b" }}>
+                        {provider.id === "ollama" ? "ollama serve" : "LM Studio → Developer → Start Local Server"}
+                      </code>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Custom Models */}
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #333" }}>
+                <h4 style={{ marginTop: 0, marginBottom: 12, color: "#87ceeb" }}>
+                  ⚙️ 自訂模型
+                </h4>
+                <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
+                  手動新增任意模型 (OpenAI 相容 API 格式)
+                </p>
+                <CustomModels />
+              </div>
 
               {/* Reset All Data Section */}
               <div

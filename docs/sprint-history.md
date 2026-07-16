@@ -123,6 +123,18 @@
 
 ---
 
+## Sprint 13（完成 ✅）- v1.0.1
+
+### Bug Fixes
+- **Gemini API model names updated**: `gemini-1.5-flash` → `gemini-3.5-flash`, `gemini-1.5-pro` → `gemini-2.5-pro`
+- **Cross-platform model contamination fixed**: `normalizeConversation` validates `model` belongs to target platform
+- **handleSend model validation**: Composer-passed model validated before API call
+- **regenerateWith model validation**: "Reply with..." model now validated against platform
+
+### New Features
+- NVIDIA Nemotron provider (nemotron-3-ultra, nemotron-4-340b, nemotron-3-8b)
+- Custom Models management in App Settings
+
 ## 版本對照表
 
 | 版本 | 日期 | 主要里程碑 |

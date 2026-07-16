@@ -9,10 +9,14 @@ const ENDPOINT = import.meta.env.DEV
   : "https://api.openai.com/v1/chat/completions";
 
 // UI 層 model id（見 constants/models.ts）→ 真正呼叫 OpenAI API 用的 model 字串
+// 官方 API 文件：https://developers.openai.com/api/docs/models
 const API_MODEL_MAP: Record<string, string> = {
   "gpt-4o": "gpt-4o",
   "gpt-4o-mini": "gpt-4o-mini",
   "gpt-4-turbo": "gpt-4-turbo",
+  "gpt-5.6-sol": "gpt-5.6-sol",
+  "gpt-5.6-terra": "gpt-5.6-terra",
+  "gpt-5.6-luna": "gpt-5.6-luna",
 };
 
 function resolveApiModel(model: string): string {

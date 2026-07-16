@@ -4,10 +4,14 @@ import { createFallbackReply } from "./utils";
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
 // UI 層 model id（見 constants/models.ts）→ 真正呼叫 Anthropic API 用的 model 字串
+// 官方 API 文件：https://docs.anthropic.com/en/docs/about-claude/models
 const API_MODEL_MAP: Record<string, string> = {
   "sonnet-3.5": "claude-3-5-sonnet-20241022",
   "haiku-3.5": "claude-3-5-haiku-20241022",
   "opus-3": "claude-3-opus-20240229",
+  "opus-4": "claude-opus-4-8",
+  "sonnet-5": "claude-sonnet-5",
+  "haiku-4": "claude-haiku-4-5-20251001",
 };
 
 function resolveApiModel(model: string): string {

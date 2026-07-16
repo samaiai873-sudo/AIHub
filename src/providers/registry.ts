@@ -4,6 +4,7 @@ import { claudeProvider } from "./claudeProvider";
 import { geminiProvider } from "./geminiProvider";
 import { ollamaProvider } from "./ollamaProvider";
 import { lmstudioProvider } from "./lmstudioProvider";
+import { nvidiaProvider } from "./nvidiaProvider";
 import { createUnsupportedProvider } from "./unsupportedProvider";
 
 // 之後要支援 LM Studio / grok / perplexity / copilot 等，
@@ -15,6 +16,7 @@ export const providerRegistry: Record<string, AIProvider> = {
   gemini: geminiProvider,
   ollama: ollamaProvider,
   lmstudio: lmstudioProvider,
+  nvidia: nvidiaProvider,
   grok: createUnsupportedProvider("grok", "Grok"),
   perplexity: createUnsupportedProvider("perplexity", "Perplexity"),
   copilot: createUnsupportedProvider("copilot", "Microsoft Copilot"),

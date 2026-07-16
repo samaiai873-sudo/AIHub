@@ -55,10 +55,12 @@ function normalizeConversation(
     ? rawPlatform
     : DEFAULT_PLATFORM;
 
-  // 取得該平台的預設模型
+  // 取得該平台的預設模型（若儲存的 model 不屬於該平台則重置）
+  const rawModel = conversation.model;
   const model =
-    conversation.model ??
-    getDefaultModel(platform);
+    rawModel && isValidModelForPlatform(platform, rawModel)
+      ? rawModel
+      : getDefaultModel(platform);
 
   return {
     id: conversation.id,
@@ -377,7 +379,9 @@ export default function useConversations() {
     const validatedPlatform = isPlatform(newPlatform)
       ? newPlatform
       : DEFAULT_PLATFORM;
-    const finalModel = newModel ?? getDefaultModel(validatedPlatform);
+    const finalModel = (newModel && isValidModelForPlatform(validatedPlatform, newModel))
+      ? newModel
+      : getDefaultModel(validatedPlatform);
 
     // 標記正在重新生成
     setConversations((prev) =>
