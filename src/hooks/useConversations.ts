@@ -6,7 +6,7 @@ import {
   isPlatform,
   type Platform,
 } from "../constants/platforms";
-import { getDefaultModel } from "../constants/models";
+import { getDefaultModel, isValidModelForPlatform } from "../constants/models";
 import type {
   Conversation,
   Message,
