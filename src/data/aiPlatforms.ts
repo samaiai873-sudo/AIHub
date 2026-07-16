@@ -18,6 +18,9 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🤖",
     url: "https://chatgpt.com",
     models: [
+      { id: "gpt-5.6-sol", name: "GPT-5.6 Sol" },
+      { id: "gpt-5.6-terra", name: "GPT-5.6 Terra" },
+      { id: "gpt-5.6-luna", name: "GPT-5.6 Luna" },
       { id: "gpt-4o", name: "GPT-4o" },
       { id: "gpt-4o-mini", name: "GPT-4o Mini" },
       { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
@@ -29,9 +32,12 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🟣",
     url: "https://claude.ai",
     models: [
-      { id: "sonnet-3.5", name: "Sonnet 3.5" },
-      { id: "haiku-3.5", name: "Haiku 3.5" },
-      { id: "opus-3", name: "Opus 3" },
+      { id: "sonnet-5", name: "Claude Sonnet 5" },
+      { id: "opus-4", name: "Claude Opus 4.8" },
+      { id: "haiku-4", name: "Claude Haiku 4.5" },
+      { id: "sonnet-3.5", name: "Claude Sonnet 3.5 (舊版)" },
+      { id: "haiku-3.5", name: "Claude Haiku 3.5 (舊版)" },
+      { id: "opus-3", name: "Claude Opus 3 (舊版)" },
     ],
   },
   {
@@ -55,7 +61,10 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🌊",
     url: "https://www.perplexity.ai",
     models: [
-      { id: "sonar", name: "Sonar" },
+      { id: "sonar-pro", name: "Sonar Pro" },
+      { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro" },
+      { id: "sonar-deep-research", name: "Sonar Deep Research" },
+      { id: "sonar", name: "Sonar (基本)" },
     ],
   },
   {
@@ -73,6 +82,7 @@ export const aiPlatforms: AIPlatform[] = [
     icon: "🚀",
     url: "https://x.com/grok",
     models: [
+      { id: "grok-4.5", name: "Grok 4.5" },
       { id: "grok-4", name: "Grok 4" },
     ],
   },

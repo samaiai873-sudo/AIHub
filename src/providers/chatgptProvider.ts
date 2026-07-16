@@ -27,7 +27,7 @@ export const chatgptProvider: AIProvider = {
   id: "chatgpt",
   name: "ChatGPT",
   supportsStreaming: true,
-  defaultModel: "gpt-4o",
+  defaultModel: "gpt-5.6-sol",
 
   async sendMessage({ model, prompt, apiKey, onChunk }) {
     if (!apiKey) {

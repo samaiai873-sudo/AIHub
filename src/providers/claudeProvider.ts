@@ -22,7 +22,7 @@ export const claudeProvider: AIProvider = {
   id: "claude",
   name: "Claude",
   supportsStreaming: true,
-  defaultModel: "sonnet-3.5",
+  defaultModel: "sonnet-5",
 
   async sendMessage({ model, prompt, apiKey, onChunk }) {
     if (!apiKey) {
