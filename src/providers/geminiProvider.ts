@@ -9,7 +9,7 @@ function endpointFor(apiModel: string, streaming: boolean) {
 // UI 層 model id（見 constants/models.ts）→ 真正呼叫 Gemini API 用的 model 字串
 // 官方 API 模型名稱參考：https://ai.google.dev/gemini-api/docs/models
 const API_MODEL_MAP: Record<string, string> = {
-  "gemini-flash-latest": "gemini-3.5-flash",
+  "gemini-flash-latest": "gemini-2.5-flash",
   "gemini-pro-latest": "gemini-2.5-pro",
   "gemini-2.5-flash": "gemini-2.5-flash",
   "gemini-2.5-pro": "gemini-2.5-pro",

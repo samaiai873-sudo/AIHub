@@ -429,33 +429,33 @@ export default function ConversationWorkspace() {
             </div>
           )}
         </div>
-      </div>
 
-      <MessageList
-        messages={
-          currentConversation?.messages ?? []
-        }
-      />
-
-      {currentConversation ? (
-        <Composer
-          onSend={handleSend}
-          isFreeMode={!apiKeys[currentConversation.platform]}
-          defaultPlatform={currentConversation.platform}
-          defaultModel={currentConversation.model}
+        <MessageList
+          messages={
+            currentConversation?.messages ?? []
+          }
         />
-      ) : (
-        <div
-          style={{
-            padding: 20,
-            textAlign: "center",
-            color: "#888",
-            borderTop: "1px solid #333",
-          }}
-        >
-          點擊左側「＋ New Conversation」開始聊天。
-        </div>
-      )}
+
+        {currentConversation ? (
+          <Composer
+            onSend={handleSend}
+            isFreeMode={!apiKeys[currentConversation.platform]}
+            defaultPlatform={currentConversation.platform}
+            defaultModel={currentConversation.model}
+          />
+        ) : (
+          <div
+            style={{
+              padding: 20,
+              textAlign: "center",
+              color: "#888",
+              borderTop: "1px solid #333",
+            }}
+          >
+            點擊左側「＋ New Conversation」開始聊天。
+          </div>
+        )}
+      </div>
 
       {toast && (
         <div
