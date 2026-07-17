@@ -1,12 +1,12 @@
 # AIHub 隱私權政策
 
-**最後更新日期：2026年7月15日**
+**最後更新日期：2026年7月17日**
 
 ---
 
 ## 1. 簡介
 
-歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Ollama、LM Studio 等多種 AI 提供商，並整合 Model Context Protocol (MCP) 以支援本地工具調用。
+歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，加上自訂模型（OpenAI 相容 API 端點），並整合 Model Context Protocol (MCP) 以支援本地工具調用。
 
 本隱私權政策說明我們如何收集、使用、儲存和保護您的資料。使用本擴充功能即表示您同意本政策的條款。
 
@@ -43,6 +43,9 @@
 | `api.openai.com` | ChatGPT API | 您的提示詞 + API Key (標頭) |
 | `api.anthropic.com` | Claude API | 您的提示詞 + API Key (標頭) |
 | `generativelanguage.googleapis.com` | Gemini API | 您的提示詞 + API Key (查詢參數) |
+| `api.x.ai` | Grok API (xAI) | 您的提示詞 + API Key (標頭) |
+| `integrate.api.nvidia.com` | NVIDIA Nemotron API | 您的提示詞 + API Key (標頭) |
+| 您設定的自訂 API 端點 | 自訂模型 (OpenAI 相容) | 您的提示詞 + API Key (標頭，選用) |
 | `localhost:11434` | Ollama 本地服務 | 您的提示詞 (無 API Key) |
 | `localhost:1234` | LM Studio 本地服務 | 您的提示詞 (無 API Key) |
 | 您設定的 MCP SSE 端點 | MCP 伺服器連線 | 工具調用參數/結果 |

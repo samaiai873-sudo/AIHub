@@ -1,7 +1,7 @@
 # AIHub 專案交接文件
 
-> **版本**: 1.0.0  
-> **更新日期**: 2026-07-15  
+> **版本**: 1.0.2  
+> **更新日期**: 2026-07-17  
 > **專案狀態**: 生產就緒，可提交 Chrome Web Store 審核
 
 ---
@@ -9,7 +9,7 @@
 ## 1. 專案概覽
 
 ### 1.1 專案定位
-AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Ollama、LM Studio 等多種 AI 提供商，整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定端到端加密**儲存（無需主密碼）。
+AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等 7 種 AI 提供商，加上**自訂模型**（OpenAI 相容 API 端點），整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定端到端加密**儲存（無需主密碼）。
 
 ### 1.2 技術棧
 | 層級 | 技術 |
@@ -33,6 +33,7 @@ AIHub/
 │   ├── utils/                    # 工具函式 (加密、匯出等)
 │   ├── constants/                # 常數定義
 │   ├── types/                    # TypeScript 型別定義
+│   ├── data/                     # 靜態資料 (aiPlatforms.ts)
 │   ├── App.tsx                   # 主應用程式
 │   └── main.tsx                  # 入口點
 ├── extension/                    # Chrome Extension (MV3)
@@ -65,20 +66,25 @@ interface AIProvider {
 }
 ```
 
-**實作**: `chatgptProvider.ts`, `claudeProvider.ts`, `geminiProvider.ts`, `ollamaProvider.ts`, `lmstudioProvider.ts`
+**已實作 Provider**:
+- `chatgptProvider.ts` — OpenAI API (SSE 串流)
+- `claudeProvider.ts` — Anthropic API (SSE 串流)
+- `geminiProvider.ts` — Google Gemini API (SSE 串流, `alt=sse`)
+- `grokProvider.ts` — xAI API (SSE 串流) **v1.0.2 新增**
+- `ollamaProvider.ts` — 本地 Ollama API
+- `lmstudioProvider.ts` — 本地 LM Studio API
+- `nvidiaProvider.ts` — NVIDIA Nemotron API
+- `customProvider.ts` — 自訂 OpenAI 相容 API **v1.0.2 新增**
 
 **註冊**: `src/providers/registry.ts` - 統一管理所有 Provider
 
-#### Context Pattern (狀態管理)
-```typescript
-// src/context/ConversationContext.tsx
-export function ConversationProvider({ children }) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  // CRUD operations...
-  return <ConversationContext.Provider value={{...}}>{children}</ConversationContext.Provider>;
-}
-```
+#### Custom Provider (自訂模型) **v1.0.2 新增**
+- 用戶從 Settings → 自訂模型新增（名稱、端點、模型 ID、API Key）
+- platform id 格式：`custom:<id>`
+- `generateAssistantReply` 偵測 `custom:` 前綴後動態建立 provider
+- 自訂模型顯示於左側 `Sidebar` AI Agents 列表，點擊即建立對話
 
+#### Context Pattern (狀態管理)
 **Context 列表**:
 - `ConversationContext` - 對話 CRUD、搜尋、分支
 - `AgentContext` - AI 代理人管理
@@ -86,10 +92,10 @@ export function ConversationProvider({ children }) {
 #### Hook Pattern (邏輯復用)
 | Hook | 用途 |
 |------|------|
-| `useConversations` | 對話 CRUD、搜尋、重新生成 |
+| `useConversations` | 對話 CRUD、搜尋、重新生成 (regenerateWith) |
 | `useApiKeys` | API 金鑰加密儲存 |
 | `useSecureLocalStorage` | 異步加密儲存 |
-| `useAppSettings` | 應用設定持久化 |
+| `useAppSettings` | 應用設定、自訂模型、路由規則持久化 |
 | `usePrompts` | Prompt 庫管理 |
 | `useConversationSearch` | 全文搜尋 |
 | `useGlobalSearch` | 跨對話/Prompt 搜尋 |
@@ -107,7 +113,7 @@ providers/index.ts → generateAssistantReply()
     ↓
 Provider Registry → getProvider(platform)
     ↓
-Specific Provider (chatgpt/claude/gemini/ollama/lmstudio)
+Specific Provider (chatgpt/claude/gemini/grok/ollama/lmstudio/nvidia/custom)
     ↓
 API Call (fetch + streaming)
     ↓
@@ -116,7 +122,7 @@ onChunk 回呼 → 即時更新 UI
 onComplete → 儲存到 ConversationContext
 ```
 
-### 2.3 **新版加密架構** (v1.0.0 重大變更)
+### 2.3 加密架構 (v1.0.0 起)
 
 > **重大變更**: 移除主密碼機制，改為瀏覽器綁定隨機金鑰加密
 
@@ -142,21 +148,6 @@ localStorage / chrome.storage.local
 
 **關鍵檔案**: `src/utils/secureStorage.ts`
 
-**Hook 變更**:
-```typescript
-// 所有敏感資料使用 useSecureLocalStorage (無需密碼參數)
-const [apiKeys, setApiKeys, isLoaded] = useSecureLocalStorage<ApiKeys>(
-  "aihub-api-keys",
-  {}
-);
-
-// 一般設定繼續使用 useLocalStorage
-const [settings, setSettings] = useLocalStorage<Settings>(
-  "aihub-settings",
-  defaultSettings
-);
-```
-
 ---
 
 ## 3. 語言風格與程式碼規範
@@ -173,28 +164,6 @@ const [settings, setSettings] = useLocalStorage<Settings>(
 | **函式** | camelCase | `generateAssistantReply()` |
 | **私有方法** | `_` 前綴 | `_deriveKey()` |
 
-#### 型別定義風格
-```typescript
-// 介面優於 type alias
-interface Conversation {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-// 聯合類型用於狀態
-type Page = "conversation" | "prompt" | "settings";
-
-// 泛型 Hook 回傳型別
-function useLocalStorage<T>(key: string, initialValue: T): [
-  T,
-  (value: T | ((prev: T) => T)) => void,
-  boolean
-];
-```
-
 ### 3.2 React 組件風格
 
 #### 函式式組件 + Hooks
@@ -203,16 +172,11 @@ export default function ConversationWorkspace() {
   const { conversations, createConversation } = useConversationContext();
   const [page, setPage] = useState<Page>("conversation");
   
-  // 事件處理器使用 useCallback
   const handleSend = useCallback(async (content: string) => {
     // ...
   }, []);
   
-  return (
-    <div className="workspace">
-      {/* JSX */}
-    </div>
-  );
+  return <div className="workspace">{/* JSX */}</div>;
 }
 ```
 
@@ -220,94 +184,6 @@ export default function ConversationWorkspace() {
 - **Inline Styles** 為主 (動態主題、條件式樣式)
 - **CSS Variables** 用於主題色系
 - **無 CSS-in-JS 库** (保持輕量)
-
-```tsx
-<div style={{
-  display: "flex",
-  height: "100vh",
-  background: "#202123",
-}}>
-  <Sidebar />
-  <main style={{ flex: 1, overflow: "auto", padding: 20 }}>
-    {page === "conversation" && <ConversationWorkspace />}
-  </main>
-</div>
-```
-
-### 3.3 非同步處理
-
-```typescript
-// 統一使用 async/await
-const response = await fetch(url, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(params)
-});
-
-if (!response.ok) {
-  const error = await response.json().catch(() => ({ error: "Unknown error" }));
-  throw new Error(error.error ?? `HTTP ${response.status}`);
-}
-
-return response.json();
-```
-
-#### 串流處理
-```typescript
-const reader = response.body?.getReader();
-const decoder = new TextDecoder();
-let buffer = "";
-
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  
-  buffer += decoder.decode(value, { stream: true });
-  const lines = buffer.split("\n");
-  buffer = lines.pop() ?? "";
-  
-  for (const line of lines) {
-    if (line.startsWith("data: ")) {
-      const data = JSON.parse(line.slice(6));
-      if (data.response) yield data.response;
-    }
-  }
-}
-```
-
-### 3.4 錯誤處理
-
-```typescript
-try {
-  const result = await riskyOperation();
-  return { success: true, data: result };
-} catch (error) {
-  // 統一錯誤格式
-  return {
-    success: false,
-    error: error instanceof Error ? error.message : "Unknown error"
-  };
-}
-```
-
-### 3.5 測試風格
-
-```typescript
-// Vitest + happy-dom
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-describe("secureStorage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    localStorage.clear();
-  });
-
-  it("should encrypt and decrypt data", async () => {
-    const result = await encryptData("test-key", "secret");
-    expect(result.success).toBe(true);
-  });
-});
-```
 
 ---
 
@@ -342,20 +218,28 @@ const [settings, setSettings] = useLocalStorage<Settings>(
 
 ```typescript
 interface Message {
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant" | "system" | "error";
   content: string;
   timestamp: number;
   provider?: string;      // assistant 訊息專用
   model?: string;         // assistant 訊息專用
   isError?: boolean;      // 錯誤訊息標記
+  regenerating?: boolean; // 重新生成中
+  originalModel?: string;  // 原始模型（重新生成時保留）
 }
-```
 
-### 4.4 路由/頁面狀態
+### 4.4 支援的平台 (7 個 + 自訂)
 
-```typescript
-// App.tsx 使用單一 state 管理頁面
-const [page, setPage] = useState<"conversation" | "prompt" | "settings">("conversation");
+| Platform | ID | 預設模型 | 串流 |
+|----------|----|----------|------|
+| ChatGPT | `chatgpt` | `gpt-5.6-sol` | SSE |
+| Claude | `claude` | `sonnet-5` | SSE |
+| Gemini | `gemini` | `gemini-flash-latest` | SSE (`alt=sse`) |
+| Grok | `grok` | `grok-4.5` | SSE |
+| Ollama | `ollama` | `llama3.1` | SSE |
+| LM Studio | `lmstudio` | `local-model` | SSE |
+| NVIDIA | `nvidia` | `nemotron-3-ultra` | SSE |
+| Custom | `custom:<id>` | 使用者指定 | SSE |
 ```
 
 ---
@@ -396,7 +280,9 @@ npm run build        # 輸出到 dist/
 | `host_permissions: <all_urls>` 審核不過 | 僅用於 AI API 直連，不存取網頁內容，提供權限說明文件 |
 | Native Messaging 無法連線 | 確認 `install.py` 已執行，檢查 manifest 路徑 |
 | Ollama/LM Studio 連線失敗 | 確認本地服務啟動，檢查端點 URL |
-| **加密解密失敗** | **新架構：檢查瀏覽器是否支援 Web Crypto API，確認 localStorage 金鑰存在** |
+| Gemini API 回應為空 | 確認串流使用 `alt=sse` 參數 (v1.0.2 修復) |
+| Reply with... 失敗 | `regenerateWith` 需用 `secureStorage.getItem` 解密讀取 (v1.0.2 修復) |
+| 加密解密失敗 | 檢查瀏覽器是否支援 Web Crypto API，確認 localStorage 金鑰存在 |
 | CI 失敗 | 檢查 Node 版本 (需 18+)、依賴安裝完整性 |
 
 ---
@@ -408,15 +294,27 @@ npm run build        # 輸出到 dist/
 | 主入口 | `src/main.tsx` |
 | 應用根組件 | `src/App.tsx` |
 | Provider 註冊 | `src/providers/registry.ts` |
-| **加密核心** | `src/utils/secureStorage.ts` |
-| **安全儲存 Hook** | `src/hooks/useSecureLocalStorage.ts` |
+| Provider 統一入口 | `src/providers/index.ts` |
+| ChatGPT Provider | `src/providers/chatgptProvider.ts` |
+| Claude Provider | `src/providers/claudeProvider.ts` |
+| Gemini Provider | `src/providers/geminiProvider.ts` |
+| Grok Provider | `src/providers/grokProvider.ts` |
+| Custom Provider | `src/providers/customProvider.ts` |
+| 加密核心 | `src/utils/secureStorage.ts` |
+| 安全儲存 Hook | `src/hooks/useSecureLocalStorage.ts` |
 | 對話狀態 | `src/context/ConversationContext.tsx` |
 | API Keys 管理 | `src/hooks/useApiKeys.ts` |
-| 設定管理 | `src/hooks/useAppSettings.ts` |
+| 設定管理 + 自訂模型 | `src/hooks/useAppSettings.ts` |
+| 自訂模型 UI | `src/components/CustomModels.tsx` |
+| 左側導航 (含自訂模型) | `src/components/Sidebar.tsx` |
 | Extension Background | `extension/background/background.js` |
 | Native Messaging Host | `extension/native-host/aihub_native_host.py` |
 | Side Panel UI | `extension/src/sidepanel/App.tsx` |
 | 隱私權政策 | `docs/privacy/index.html` |
+| 路由規則 | `src/constants/routing.ts` |
+| 平台定義 | `src/constants/platforms.ts` |
+| 模型定義 | `src/constants/models.ts` |
+| 平台資料 | `src/data/aiPlatforms.ts` |
 
 ---
 
@@ -424,25 +322,28 @@ npm run build        # 輸出到 dist/
 
 - **TypeScript**: `strict: true`, 無 `any` 隱性使用
 - **ESLint**: `react-hooks/exhaustive-deps` 嚴格模式
-- **測試覆蓋**: 核心加密模組 100% 覆蓋
+- **測試覆蓋**: 核心加密模組 100% 覆蓋 (10/10 測試通過)
 - **Git 提交**: Conventional Commits 格式
 
 ---
 
 ## 9. 版本歷程與重大變更
 
-### v1.0.0 (2026-07-15)
-- ✅ 移除主密碼機制，改為瀏覽器綁定隨機金鑰加密
-- ✅ 修復 FirstTimeSetup.tsx TypeScript 類型收窄問題
-- ✅ 修復 GlobalSearch.tsx ESLint exhaustive-deps 警告
-- ✅ 更新所有截圖素材反映新版 Settings UI (無主密碼)
-- ✅ 刪除 `src/pages/Home.tsx` 與空 `src/pages/` 目錄
-- ✅ 刪除 `src/components/ChangeMasterPassword.tsx`
-- ✅ 簡化 `src/components/ResetAllData.tsx` (移除密碼驗證)
-- ✅ 簡化 `src/components/FirstTimeSetup.tsx` (僅歡迎頁)
-- ✅ 更新 `src/hooks/useApiKeys.ts` 移除 `reEncryptApiKeys`
-- ✅ 更新 `src/hooks/useSecureLocalStorage.ts` 移除密碼參數
-- ✅ Chrome Web Store 發布套件完整準備
+### v1.0.2 (2026-07-17)
+- ✅ 實作 Grok Provider（xAI API，grok-4.5/grok-4，SSE 串流）
+- ✅ 刪除 Perplexity / Copilot 平台
+- ✅ 刪除 `unsupportedProvider.ts`（不再需要）
+- ✅ 自訂模型完整整合（customProvider + Sidebar 顯示 + generateAssistantReply 支援 custom:<id>）
+- ✅ CustomModels.tsx 新增 API Key 欄位
+- ✅ Gemini 串流回應解析改用 SSE 格式（`alt=sse`）
+- ✅ 修復 `regenerateWith` 加密讀取 bug（改用 `secureStorage.getItem` 解密）
+- ✅ 修復 PromptLibrary gpt-5 無效 model id → gpt-5.6-sol
+- ✅ 修復 PromptCard 編輯模式過時快照
+- ✅ 修復 ConversationWorkspace 佈局問題
+- ✅ 刪除死碼檔案 6 個（ImportExportBar/Header/AppHeader/apps.ts/browserWorkflow.ts/vite.config.example.ts）
+- ✅ 路由規則全部更新至最新模型
+- ✅ 重寫 README.md
+
 ### v1.0.1 (2026-07-16)
 - ✅ 修復 Gemini API 模型名稱過期（gemini-1.5-flash → gemini-3.5-flash）
 - ✅ 修復 localStorage 模型跨平台汙染（normalizeConversation model 驗證）
@@ -450,8 +351,17 @@ npm run build        # 輸出到 dist/
 - ✅ 新增 NVIDIA Nemotron Provider 支援
 - ✅ 更新 docs/ 文件同步
 
+### v1.0.0 (2026-07-15)
+- ✅ 移除主密碼機制，改為瀏覽器綁定隨機金鑰加密
+- ✅ 修復 FirstTimeSetup.tsx TypeScript 類型收窄問題
+- ✅ 修復 GlobalSearch.tsx ESLint exhaustive-deps 警告
+- ✅ 更新所有截圖素材反映新版 Settings UI (無主密碼)
+- ✅ 刪除 `src/components/ChangeMasterPassword.tsx`
+- ✅ 簡化 `src/components/ResetAllData.tsx` (移除密碼驗證)
+- ✅ 簡化 `src/components/FirstTimeSetup.tsx` (僅歡迎頁)
+- ✅ Chrome Web Store 發布套件完整準備
 
 ---
 
-*文件版本: 1.0.0 | 最後更新: 2026-07-15*  
+*文件版本: 1.0.2 | 最後更新: 2026-07-17*  
 *此文件應隨專案演進持續更新*

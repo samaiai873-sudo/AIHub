@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-07-17
+
+### ✨ Added
+- **Grok Provider**: 新增 `grokProvider.ts`，串接 xAI API (`api.x.ai/v1/chat/completions`)，支援 SSE 串流，模型 `grok-4.5`（預設）/ `grok-4`
+- **Custom Provider**: 新增 `customProvider.ts`，支援 OpenAI 相容 API 端點，用戶可從 Settings 新增自訂模型
+- **自訂模型整合**: Sidebar 左側 AI Agents 列表顯示自訂模型，點擊即建立對話；`generateAssistantReply` 支援 `custom:<id>` platform 前綴
+- **CustomModels.tsx**: 新增 API Key 欄位（選用）
+- Settings 頁面新增 xAI / Grok API Key 輸入欄
+
+### 🔧 Fixed
+- **regenerateWith 加密讀取 bug**: 直接讀 `localStorage` 加密資料 → 改用 `secureStorage.getItem` 解密，修復「Reply with...」功能
+- **Gemini 串流回應解析**: `streamGenerateContent` 端點加入 `alt=sse` 參數，確保回傳 SSE 格式；解析邏輯改為正確處理 `data:` 前綴
+- **PromptLibrary 無效 model id**: `gpt-5` → `gpt-5.6-sol`
+- **PromptCard 編輯模式過時快照**: 進入編輯模式時同步 `content`
+- **ConversationWorkspace 佈局**: `MessageList` 和 `Composer` 原本被放在 flex 容器外面，修正為正確包在中間面板內
+
+### 🗑️ Removed
+- **Perplexity / Copilot 平台**: 從 `platforms.ts`、`models.ts`、`aiPlatforms.ts`、`registry.ts` 全部移除
+- **`unsupportedProvider.ts`**: 不再需要（所有平台已實作或移除）
+- **死碼檔案**: `ImportExportBar.tsx`、`Header.tsx`、`AppHeader.tsx`、`data/apps.ts`、`utils/browserWorkflow.ts`、`vite.config.example.ts`
+
+### 📝 Changed
+- **路由規則**: 9 條預設路由規則全部更新至最新模型（`sonnet-3.5`→`sonnet-5`、`gpt-4o`→`gpt-5.6-sol`、`gemini-pro-latest`→`gemini-flash-latest`）
+- **Gemini API_MODEL_MAP**: 移除孤立 `gemini-2.5-flash-lite` entry
+- **過時註解**: `types.ts`（`sonnet-4`→`sonnet-5`）、`registry.ts` 更新
+- **README.md**: 重寫為 AIHub 專案說明（取代 Vite 模板預設）
+
+---
+
 ## [1.0.1] - 2026-07-16
 
 ### 🔧 Fixed
@@ -22,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 📝 Documentation
 - handoff.md, changelog.md, sprint-history.md, roadmap.md synced
 
+---
+
 ## [1.0.0] - 2026-07-15
 
 ### 🔐 Security - Major Architecture Change
@@ -34,25 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Added
 - **Sprint 12**: API Key encryption migration to secureStorage
-  - `useSecureLocalStorage` hook for async encrypted storage
-  - `useApiKeys` migrated from `useLocalStorage` to `useSecureLocalStorage`
-  - Automatic encryption of all API keys at rest
 - **Sprint 11**: Complete Settings system
-  - First-time Setup Wizard (4-step modal, now simplified to welcome screen)
-  - Change Master Password component (deleted in v1.0.0)
-  - Reset All Data component with confirmation
-  - Password strength indicator (0-6 scoring)
-- **Sprint 10**: Compare View
-  - Multi-model parallel comparison grid
-  - Streaming per model with "Pick Winner" action
-  - Loading pulse animation
-- **Sprint 9**: Core UX Features
-  - "Reply with..." dropdown on assistant messages
-  - Multi-AI Conversation (single thread, multiple models)
-  - Conversation Routing (prefix/keyword/regex rules)
-  - 9 default routing rules (@claude, @gpt, @gemini, /code, /write, /search)
-- **Ollama Provider**: Local model support with streaming, model discovery, custom endpoint
-- **LM Studio Provider**: OpenAI-compatible API, streaming, connection check
+- **Sprint 10**: Compare View (多模型並排對比)
+- **Sprint 9**: Reply with... / Multi-AI Conversation / Conversation Routing
+- **Ollama Provider**: Local model support
+- **LM Studio Provider**: OpenAI-compatible local API
 - **Browser Extension (MV3)**: Side Panel, Context Menus, MCP Client (SSE + STDIO)
 - **Native Messaging Host**: Python host for MCP STDIO transport
 - **MCP Tool Invocation Panel**: JSON param editor, smart result renderer
@@ -62,9 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **useSecureLocalStorage.ts**: Removed password parameter, simplified to direct encryption
 - **useApiKeys.ts**: Removed `reEncryptApiKeys`, simplified API
 - **FirstTimeSetup.tsx**: 4-step password flow → single welcome screen
-- **ResetAllData.tsx**: Removed password verification, direct confirmation input
-- **App.tsx**: First-time check uses `aihub-first-time-setup` flag
-- **Extension Side Panel**: Added LM Studio, MCP STDIO, Tool Panel, Compare View
 - **GitHub Actions CI**: lint → typecheck → build → test pipeline
 
 ### 🗑️ Removed
@@ -74,10 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Master password UI from Settings page
 
 ### 🐛 Fixed
-- **TypeScript config conflict** in FirstTimeSetup.tsx: `verbatimModuleSyntax` + `erasableSyntaxOnly` strict mode
-  - Used `as const` for stepOrder array
-  - Moved early return after declaration
-  - Underscore prefix for unused params
+- **TypeScript config conflict** in FirstTimeSetup.tsx: `as const` for stepOrder, early return after declaration, underscore prefix for unused params
 - **ESLint exhaustive-deps** in Context providers: split into Provider + Context + Hook files
 - **Vitest setup**: Removed localStorage mock, use real localStorage for tests
 - **Chrome Web Store screenshots**: Regenerated after Settings UI changes
@@ -92,8 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ChatGPT Provider: SSE streaming via `/v1/chat/completions`
 - Claude Provider: SSE streaming with `anthropic-dangerous-direct-browser-access`
 - Gemini Provider: JSON Lines streaming via `streamGenerateContent`
-- Vite Dev Proxy for OpenAI CORS (`/api/openai` → `api.openai.com`)
-- Model Map validation with official 2024 model names
+- Vite Dev Proxy for OpenAI CORS
+- Model Map validation with official model names
 - Browser Workflow: Copy Prompt → Open official site
 - Project Management: CRUD, grouped display, move conversations
 

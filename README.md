@@ -2,9 +2,9 @@
 
 > 多 AI 聊天介面 · 瀏覽器綁定端到端加密 · Chrome Extension (MV3)
 
-AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定 Web Crypto 加密**儲存（無需主密碼）。
+AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，加上**自訂模型**（OpenAI 相容 API 端點），整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定 Web Crypto 加密**儲存（無需主密碼）。
 
-![Version](https://img.shields.io/badge/version-1.0.1-blue)
+![Version](https://img.shields.io/badge/version-1.0.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
@@ -20,7 +20,9 @@ AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Olla
 |----------|----------|------|
 | **ChatGPT** (OpenAI) | SSE | `/v1/chat/completions`，Vite Dev Proxy 解決 CORS |
 | **Claude** (Anthropic) | SSE | `anthropic-dangerous-direct-browser-access` 直連 |
-| **Gemini** (Google) | JSON Lines | `streamGenerateContent` 端點 |
+| **Gemini** (Google) | SSE | `streamGenerateContent` 端點（`alt=sse`） |
+| **Grok** (xAI) | SSE | `api.x.ai/v1/chat/completions`，模型 `grok-4.5` / `grok-4` |
+| **Custom** | SSE | OpenAI 相容 API 端點，使用者自訂 |
 | **Ollama** | SSE | 本地模型，模型自動探索，自訂端點 |
 | **LM Studio** | SSE | OpenAI 相容 API，連線狀態檢測 |
 | **NVIDIA Nemotron** | SSE | nemotron-3-ultra / nemotron-4-340b / nemotron-3-8b |
@@ -124,6 +126,8 @@ AIHub/
 │   │   ├── chatgptProvider.ts
 │   │   ├── claudeProvider.ts
 │   │   ├── geminiProvider.ts
+│   │   ├── grokProvider.ts
+│   │   ├── customProvider.ts
 │   │   ├── ollamaProvider.ts
 │   │   ├── lmstudioProvider.ts
 │   │   ├── nvidiaProvider.ts

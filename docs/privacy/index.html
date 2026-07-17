@@ -198,12 +198,12 @@
         <header>
             <div class="logo">AI</div>
             <h1>AIHub 隱私權政策</h1>
-            <p class="meta">最後更新：2026年7月15日 | 版本 1.0.0</p>
+            <p class="meta">最後更新：2026年7月17日 | 版本 1.0.2</p>
         </header>
 
         <section>
             <h2>1. 簡介</h2>
-            <p>歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Ollama、LM Studio 等多種 AI 提供商，並整合 Model Context Protocol (MCP) 以支援本地工具調用。</p>
+            <p>歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，加上自訂模型（OpenAI 相容 API 端點），並整合 Model Context Protocol (MCP) 以支援本地工具調用。</p>
             <p>本隱私權政策說明我們如何收集、使用、儲存和保護您的資料。使用本擴充功能即表示您同意本政策的條款。</p>
         </section>
 
@@ -247,6 +247,9 @@
                     <tr><td><code>api.openai.com</code></td><td>ChatGPT API</td><td>您的提示詞 + API Key (標頭)</td></tr>
                     <tr><td><code>api.anthropic.com</code></td><td>Claude API</td><td>您的提示詞 + API Key (標頭)</td></tr>
                     <tr><td><code>generativelanguage.googleapis.com</code></td><td>Gemini API</td><td>您的提示詞 + API Key (查詢參數)</td></tr>
+                    <tr><td><code>api.x.ai</code></td><td>Grok API (xAI)</td><td>您的提示詞 + API Key (標頭)</td></tr>
+                    <tr><td><code>integrate.api.nvidia.com</code></td><td>NVIDIA Nemotron API</td><td>您的提示詞 + API Key (標頭)</td></tr>
+                    <tr><td>您設定的自訂 API 端點</td><td>自訂模型 (OpenAI 相容)</td><td>您的提示詞 + API Key (標頭，選用)</td></tr>
                     <tr><td><code>localhost:11434</code></td><td>Ollama 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
                     <tr><td><code>localhost:1234</code></td><td>LM Studio 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
                     <tr><td>您設定的 MCP SSE 端點</td><td>MCP 伺服器連線</td><td>工具調用參數/結果</td></tr>
@@ -404,7 +407,8 @@
         </section>
 
         <footer>
-            <p>本隱私權政策採用繁體中文 (台灣) 撰寫，如有翻譯差異以中文版為準。</        <p>&copy; 2026 AIHub. 開源專案，採用 MIT License.</p>
+            <p>本隱私權政策採用繁體中文 (台灣) 撰寫，如有翻譯差異以中文版為準。</p>
+            <p>&copy; 2026 AIHub. 開源專案，採用 MIT License.</p>
         </footer>
     </div>
 </body>
