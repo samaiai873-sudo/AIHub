@@ -7,9 +7,9 @@ import { lmstudioProvider } from "./lmstudioProvider";
 import { nvidiaProvider } from "./nvidiaProvider";
 import { createUnsupportedProvider } from "./unsupportedProvider";
 
-// 之後要支援 LM Studio / grok / perplexity / copilot 等，
-// 只要新增一個 xxxProvider.ts 實作 AIProvider 介面，並把下面對應的
-// createUnsupportedProvider(...) 換成真正的實作即可。
+// 已支援：ChatGPT, Claude, Gemini, Ollama, LM Studio, NVIDIA Nemotron
+// 未實作（僅佔位）：Grok, Perplexity, Copilot
+// 新增 Provider：建立 xxxProvider.ts 實作 AIProvider 介面，再於此註冊。
 export const providerRegistry: Record<string, AIProvider> = {
   chatgpt: chatgptProvider,
   claude: claudeProvider,

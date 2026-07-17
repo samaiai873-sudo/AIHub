@@ -12,6 +12,7 @@ import type {
   Message,
 } from "../types/conversation";
 import { generateAssistantReply } from "../providers";
+import { secureStorage } from "../utils/secureStorage";
 
 // Options 型別定義（支援 Template、Prompt Library 等未來功能）
 export type CreateConversationOptions = {
@@ -407,11 +408,14 @@ export default function useConversations() {
       })
     );
 
-    // 取得 API Key
-    const apiKeys = JSON.parse(
-      localStorage.getItem("aihub-api-keys") ?? "{}"
-    );
-    const apiKey = apiKeys[validatedPlatform];
+    // 取得 API Key（從加密儲存解密）
+    let apiKey: string | undefined;
+    try {
+      const raw = await secureStorage.getItem("aihub-api-keys");
+      apiKey = raw ? (JSON.parse(raw) as Record<string, string>)[validatedPlatform] : undefined;
+    } catch {
+      apiKey = undefined;
+    }
 
     if (!apiKey) {
       // 沒有 API Key，標記錯誤

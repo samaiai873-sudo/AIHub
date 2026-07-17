@@ -116,7 +116,10 @@ export default function PromptCard({
           </>
         ) : (
           <button
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              setContent(prompt.content);
+              setEditing(true);
+            }}
           >
             ✏️ 編輯
           </button>

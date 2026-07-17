@@ -27,7 +27,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "@claude",
     patternType: "prefix",
     targetPlatform: "claude",
-    targetModel: "sonnet-3.5",
+    targetModel: "sonnet-5",
     description: "以 @claude 開頭 → 導向 Claude 寫作",
   },
   {
@@ -37,8 +37,8 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "@gpt",
     patternType: "prefix",
     targetPlatform: "chatgpt",
-    targetModel: "gpt-4o",
-    description: "以 @gpt 開頭 → 導向 GPT-4o 程式/推理",
+    targetModel: "gpt-5.6-sol",
+    description: "以 @gpt 開頭 → 導向 GPT-5.6 程式/推理",
   },
   {
     id: "route-gemini-search",
@@ -47,7 +47,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "@gemini",
     patternType: "prefix",
     targetPlatform: "gemini",
-    targetModel: "gemini-pro-latest",
+    targetModel: "gemini-flash-latest",
     description: "以 @gemini 開頭 → 導向 Gemini 搜尋/長文本",
   },
   {
@@ -57,8 +57,8 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "/code",
     patternType: "prefix",
     targetPlatform: "chatgpt",
-    targetModel: "gpt-4o",
-    description: "以 /code 開頭 → 導向 GPT-4o 寫代碼",
+    targetModel: "gpt-5.6-sol",
+    description: "以 /code 開頭 → 導向 GPT-5.6 寫代碼",
   },
   {
     id: "route-slash-write",
@@ -67,7 +67,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "/write",
     patternType: "prefix",
     targetPlatform: "claude",
-    targetModel: "sonnet-3.5",
+    targetModel: "sonnet-5",
     description: "以 /write 開頭 → 導向 Claude 寫作",
   },
   {
@@ -77,7 +77,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "/search",
     patternType: "prefix",
     targetPlatform: "gemini",
-    targetModel: "gemini-pro-latest",
+    targetModel: "gemini-flash-latest",
     description: "以 /search 開頭 → 導向 Gemini 搜尋",
   },
   {
@@ -87,8 +87,8 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "寫代碼|寫程式|code|programming|function|class|debug",
     patternType: "keyword",
     targetPlatform: "chatgpt",
-    targetModel: "gpt-4o",
-    description: "含程式關鍵字 → 導向 GPT-4o",
+    targetModel: "gpt-5.6-sol",
+    description: "含程式關鍵字 → 導向 ChatGPT",
   },
   {
     id: "route-keyword-write",
@@ -97,7 +97,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "寫文章|寫文案|copywriting|潤飾|改寫|摘要|總結",
     patternType: "keyword",
     targetPlatform: "claude",
-    targetModel: "sonnet-3.5",
+    targetModel: "sonnet-5",
     description: "含寫作關鍵字 → 導向 Claude",
   },
   {
@@ -107,7 +107,7 @@ export const DEFAULT_ROUTING_RULES: RoutingRule[] = [
     pattern: "搜尋|查詢|最新|新聞|current|latest|news|搜索",
     patternType: "keyword",
     targetPlatform: "gemini",
-    targetModel: "gemini-pro-latest",
+    targetModel: "gemini-flash-latest",
     description: "含搜尋關鍵字 → 導向 Gemini",
   },
 ];

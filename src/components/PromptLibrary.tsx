@@ -25,7 +25,7 @@ export default function PromptLibrary() {
     useState("chatgpt");
 
   const [model, setModel] =
-    useState("gpt-5");
+    useState("gpt-5.6-sol");
 
   const [search, setSearch] = useState("");
 

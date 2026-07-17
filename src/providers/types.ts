@@ -10,7 +10,7 @@ export type AssistantReply = {
 };
 
 export type SendMessageParams = {
-  /** UI 層使用的 model id（例如 "sonnet-4"），Provider 內部會轉換成真正的 API model 字串 */
+  /** UI 層使用的 model id（例如 "sonnet-5"），Provider 內部會轉換成真正的 API model 字串 */
   model: string;
   prompt: string;
   apiKey?: string;

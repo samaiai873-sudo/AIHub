@@ -46,6 +46,8 @@ export default function ProjectManager({
   }, [conversations]);
 
   const handleCreateProject = () => {
+    // 專案透過 ConversationSidebar 的「Move to Project」建立，
+    // 此處僅清空輸入欄（無對應的 context API）
     if (!newProjectName.trim()) return;
     setNewProjectName("");
   };

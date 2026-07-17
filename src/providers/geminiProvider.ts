@@ -17,7 +17,6 @@ const API_MODEL_MAP: Record<string, string> = {
   "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
   "gemini-2.5-flash": "gemini-2.5-flash",
   "gemini-2.5-pro": "gemini-2.5-pro",
-  "gemini-2.5-flash-lite": "gemini-2.5-flash-lite",
 };
 
 function resolveApiModel(model: string): string {
