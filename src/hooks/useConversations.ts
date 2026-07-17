@@ -444,12 +444,19 @@ export default function useConversations() {
     }
 
     try {
+      // 讀取自訂模型設定（regenerateWith 在 hook 外部呼叫，需自取 settings）
+      const settingsRaw = localStorage.getItem("aihub-settings");
+      const customModels = settingsRaw
+        ? (JSON.parse(settingsRaw) as { customModels?: never[] })?.customModels ?? []
+        : [];
+
       // 呼叫新 Provider 產生回覆
       const reply = await generateAssistantReply({
         platform: validatedPlatform,
         model: finalModel,
         prompt,
         apiKey,
+        customModels,
       });
 
       // 更新訊息內容

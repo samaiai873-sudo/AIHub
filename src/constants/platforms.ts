@@ -4,8 +4,6 @@ export type Platform =
   | "claude"
   | "gemini"
   | "grok"
-  | "perplexity"
-  | "copilot"
   | "ollama"
   | "lmstudio"
   | "nvidia";
@@ -18,8 +16,6 @@ export const SUPPORTED_PLATFORMS: Platform[] = [
   "chatgpt",
   "claude",
   "gemini",
-  "perplexity",
-  "copilot",
   "grok",
   "ollama",
   "lmstudio",

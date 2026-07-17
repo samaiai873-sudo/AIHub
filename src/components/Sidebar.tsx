@@ -1,4 +1,5 @@
 import { aiPlatforms } from "../data/aiPlatforms";
+import useAppSettings from "../hooks/useAppSettings";
 
 type SidebarProps = {
   activePage: "conversation" | "prompt" | "settings";
@@ -13,6 +14,8 @@ export default function Sidebar({
   onOpenPrompt,
   onOpenSettings,
 }: SidebarProps) {
+  const { settings } = useAppSettings();
+  const customModels = settings.customModels ?? [];
 
   return (
     <aside
@@ -77,6 +80,37 @@ export default function Sidebar({
           }}
         >
           {platform.icon} {platform.name}
+        </button>
+      ))}
+
+      {/* 自訂模型 */}
+      {customModels.map((model) => (
+        <button
+          key={model.id}
+          onClick={() => {
+            onOpenConversation(`custom:${model.id}`, model.modelId);
+          }}
+          style={{
+            display: "block",
+            width: "100%",
+            padding: 14,
+            marginBottom: 10,
+            borderRadius: 8,
+            border: "none",
+            textAlign: "left",
+            cursor: "pointer",
+            background: "#2b2b2b",
+            color: "white",
+            transition: "background-color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#3a3a3a";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#2b2b2b";
+          }}
+        >
+          🔧 {model.name}
         </button>
       ))}
 

@@ -152,6 +152,7 @@ export default function ConversationWorkspace() {
           chunk
         );
       },
+      customModels: settings.customModels ?? [],
     });
 
     const isError = reply.usedFallback || Boolean(reply.error);

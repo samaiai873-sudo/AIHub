@@ -56,27 +56,6 @@ export const aiPlatforms: AIPlatform[] = [
     ],
   },
   {
-    id: "perplexity",
-    name: "Perplexity",
-    icon: "🌊",
-    url: "https://www.perplexity.ai",
-    models: [
-      { id: "sonar-pro", name: "Sonar Pro" },
-      { id: "sonar-reasoning-pro", name: "Sonar Reasoning Pro" },
-      { id: "sonar-deep-research", name: "Sonar Deep Research" },
-      { id: "sonar", name: "Sonar (基本)" },
-    ],
-  },
-  {
-    id: "copilot",
-    name: "Microsoft Copilot",
-    icon: "🧠",
-    url: "https://copilot.microsoft.com",
-    models: [
-      { id: "copilot", name: "Copilot" },
-    ],
-  },
-  {
     id: "grok",
     name: "Grok",
     icon: "🚀",

@@ -1,14 +1,6 @@
 import { useState } from "react";
 import useAppSettings from "../hooks/useAppSettings";
 
-interface CustomModel {
-  id: string;
-  name: string;
-  platform: string;
-  endpoint: string;
-  modelId: string;
-}
-
 export default function CustomModels() {
   const { settings, updateSettings } = useAppSettings();
   const [showForm, setShowForm] = useState(false);
@@ -17,26 +9,21 @@ export default function CustomModels() {
     platform: "custom",
     endpoint: "",
     modelId: "",
+    apiKey: "",
   });
 
-  const customModels: CustomModel[] = settings.customModels || [];
+  const customModels = settings.customModels || [];
 
   const handleAddModel = () => {
     if (!formData.name || !formData.endpoint || !formData.modelId) {
-      alert("請填寫所有欄位");
+      alert("請填寫顯示名稱、API 端點、模型 ID");
       return;
     }
-
-    const newModel: CustomModel = {
-      id: `custom-${Date.now()}`,
-      ...formData,
-    };
-
     updateSettings({
-      customModels: [...customModels, newModel],
+      customModels: [...customModels, { ...formData, id: `custom-${Date.now()}` }],
     });
 
-    setFormData({ name: "", platform: "custom", endpoint: "", modelId: "" });
+    setFormData({ name: "", platform: "custom", endpoint: "", modelId: "", apiKey: "" });
     setShowForm(false);
   };
 
@@ -121,6 +108,28 @@ export default function CustomModels() {
             />
           </div>
 
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: "#ccc" }}>
+              API Key（選用）
+            </label>
+            <input
+              type="password"
+              value={formData.apiKey}
+              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+              placeholder="留空則不需認證"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "1px solid #555",
+                background: "#1a1a1a",
+                color: "white",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={handleAddModel}
@@ -140,7 +149,7 @@ export default function CustomModels() {
             <button
               onClick={() => {
                 setShowForm(false);
-                setFormData({ name: "", platform: "custom", endpoint: "", modelId: "" });
+                setFormData({ name: "", platform: "custom", endpoint: "", modelId: "", apiKey: "" });
               }}
               style={{
                 flex: 1,

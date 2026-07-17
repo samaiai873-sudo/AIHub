@@ -203,6 +203,7 @@ export default function App() {
                 { id: "chatgpt", label: "OpenAI / ChatGPT" },
                 { id: "claude", label: "Anthropic / Claude" },
                 { id: "gemini", label: "Google / Gemini" },
+                { id: "grok", label: "xAI / Grok" },
                 { id: "nvidia", label: "NVIDIA Nemotron" },
               ].map((provider) => (
                 <div
