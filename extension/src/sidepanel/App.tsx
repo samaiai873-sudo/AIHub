@@ -24,14 +24,35 @@ interface Provider {
   models: string[];
 }
 
+interface MCPServerConfig {
+  url?: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+
 interface MCPServer {
   id: string;
   name: string;
   transport: 'sse' | 'stdio';
-  config: Record<string, any>;
+  config: MCPServerConfig;
   status?: 'connected' | 'disconnected' | 'connecting' | 'error';
   toolsCount?: number;
   lastError?: string;
+}
+
+interface MCPContentItem {
+  type?: 'text' | 'image' | 'resource';
+  text?: string;
+  data?: string;
+  mimeType?: string;
+  resource?: unknown;
+}
+
+interface ToolResult {
+  error?: string;
+  content?: MCPContentItem[];
+  [key: string]: unknown;
 }
 
 interface State {
@@ -94,7 +115,7 @@ function App() {
   // Tool invocation state
   const [selectedTool, setSelectedTool] = useState<{ serverId: string; toolName: string } | null>(null);
   const [toolArgs, setToolArgs] = useState<string>('{}');
-  const [toolResult, setToolResult] = useState<any>(null);
+  const [toolResult, setToolResult] = useState<ToolResult | null>(null);
   const [invokingTool, setInvokingTool] = useState<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -121,7 +142,9 @@ function App() {
   }, [state]);
 
   useEffect(() => {
-    loadState();
+    // 初始化載入本地儲存狀態（僅在掛載時執行一次）
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadState();
     scrollToBottom();
   }, [loadState, scrollToBottom]);
 
@@ -258,9 +281,9 @@ function App() {
       return;
     }
 
-    const config: Record<string, any> = mcpForm.transport === 'sse'
+    const config: MCPServerConfig = mcpForm.transport === 'sse'
       ? { url: mcpForm.url }
-      : { 
+      : {
           command: mcpForm.command,
           args: mcpForm.args.split(' ').filter(Boolean),
           env: mcpForm.env ? JSON.parse(mcpForm.env) : {},
@@ -316,7 +339,7 @@ function App() {
     let args;
     try {
       args = JSON.parse(toolArgs || '{}');
-    } catch (e) {
+    } catch {
       setToolResult({ error: '參數必須是合法的 JSON' });
       setInvokingTool(null);
       return;
@@ -345,7 +368,7 @@ function App() {
     }
   };
 
-  const renderToolResult = (result: any) => {
+  const renderToolResult = (result: ToolResult) => {
     if (!result) return null;
     
     if (result.error) {
@@ -361,7 +384,7 @@ function App() {
     if (result.content) {
       return (
         <div className="result-content-mcp">
-          {result.content.map((item: any, index: number) => (
+          {result.content.map((item: MCPContentItem, index: number) => (
             <div key={index} className={`result-item ${item.type || 'text'}`}>
               {item.type === 'text' && (
                 <pre className="result-text">{item.text}</pre>
@@ -391,15 +414,6 @@ function App() {
         <pre>{JSON.stringify(result, null, 2)}</pre>
       </div>
     );
-  };
-
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'connected': return '🟢';
-      case 'connecting': return '🟡';
-      case 'error': return '🔴';
-      default: return '⚪';
-    }
   };
 
   const getStatusText = (status?: string) => {
@@ -487,7 +501,7 @@ function App() {
               <div className="empty-state">暫無對話，點擊上方 + 開始新對話</div>
             )}
           </div>
-          <div className="sidebar-resizer" onMouseDown={e => startResize(e)}></div>
+          <div className="sidebar-resizer" onMouseDown={e => startResize(e, setSidebarWidth)}></div>
         </aside>
 
         <main className="chat-area">
@@ -849,20 +863,24 @@ function formatMessage(content: string): string {
     .replace(/\n/g, '<br>');
 }
 
-function startResize(e: React.MouseEvent) {
+function startResize(
+  e: React.MouseEvent,
+  setSidebarWidth: (width: number) => void
+) {
   const startX = e.clientX;
   const startWidth = 280;
-  
-  const onMouseMove = (e: MouseEvent) => {
-    const newWidth = Math.max(200, Math.min(500, startWidth + (e.clientX - startX)));
+
+  const onMouseMove = (ev: MouseEvent) => {
+    const newWidth = Math.max(200, Math.min(500, startWidth + (ev.clientX - startX)));
     document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+    setSidebarWidth(newWidth);
   };
-  
+
   const onMouseUp = () => {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
   };
-  
+
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
 }
