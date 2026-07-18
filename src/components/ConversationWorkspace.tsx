@@ -263,6 +263,21 @@ export default function ConversationWorkspace() {
                 value={currentConversation.platform}
                 onChange={(event) => {
                   const nextPlatform = event.target.value;
+
+                  // 自訂模型：platform 格式為 "custom:<id>"
+                  if (nextPlatform.startsWith("custom:")) {
+                    const customId = nextPlatform.slice("custom:".length);
+                    const customModel = settings.customModels.find(
+                      (m) => m.id === customId
+                    );
+                    changeConversationPlatform(
+                      currentConversation.id,
+                      nextPlatform,
+                      customModel?.modelId
+                    );
+                    return;
+                  }
+
                   const nextPlatformInfo = aiPlatforms.find(
                     (item) => item.id === nextPlatform
                   );
@@ -289,9 +304,56 @@ export default function ConversationWorkspace() {
                     {platform.icon} {platform.name}
                   </option>
                 ))}
+                {settings.customModels.length > 0 && (
+                  <optgroup label="自訂模型">
+                    {settings.customModels.map((custom) => (
+                      <option
+                        key={`custom:${custom.id}`}
+                        value={`custom:${custom.id}`}
+                      >
+                        🛠 {custom.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
 
               {(() => {
+                // 自訂模型：顯示單一模型選項（讓使用者知道目前綁定的 modelId）
+                if (currentConversation.platform.startsWith("custom:")) {
+                  const customId = currentConversation.platform.slice("custom:".length);
+                  const customModel = settings.customModels.find(
+                    (m) => m.id === customId
+                  );
+                  if (!customModel) return null;
+                  return (
+                    <select
+                      value={currentConversation.model}
+                      onChange={(event) => {
+                        changeConversationPlatform(
+                          currentConversation.id,
+                          currentConversation.platform,
+                          event.target.value
+                        );
+                      }}
+                      title="自訂模型 ID（可在 Settings 修改）"
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        border: "1px solid #555",
+                        background: "#2b2b2b",
+                        color: "white",
+                        cursor: "pointer",
+                        fontSize: 14,
+                      }}
+                    >
+                      <option value={customModel.modelId}>
+                        {customModel.modelId}
+                      </option>
+                    </select>
+                  );
+                }
+
                 const currentPlatformInfo = aiPlatforms.find(
                   (item) => item.id === currentConversation.platform
                 );
@@ -440,9 +502,21 @@ export default function ConversationWorkspace() {
         {currentConversation ? (
           <Composer
             onSend={handleSend}
-            isFreeMode={!apiKeys[currentConversation.platform]}
+            isFreeMode={
+              currentConversation.platform.startsWith("custom:")
+                ? (() => {
+                    const cm = settings.customModels.find(
+                      (m) =>
+                        m.id ===
+                        currentConversation.platform.slice("custom:".length)
+                    );
+                    return !cm?.apiKey;
+                  })()
+                : !apiKeys[currentConversation.platform]
+            }
             defaultPlatform={currentConversation.platform}
             defaultModel={currentConversation.model}
+            customModels={settings.customModels}
           />
         ) : (
           <div

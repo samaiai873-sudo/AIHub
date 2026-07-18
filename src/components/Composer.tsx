@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { aiPlatforms } from "../data/aiPlatforms";
+import type { CustomModel } from "../hooks/useAppSettings";
 
 type ComposerProps = {
   onSend: (content: string, platform?: string, model?: string) => void;
   isFreeMode?: boolean;
   defaultPlatform?: string;
   defaultModel?: string;
+  customModels?: CustomModel[];
 };
 
 export default function Composer({
@@ -13,6 +15,7 @@ export default function Composer({
   isFreeMode = true,
   defaultPlatform,
   defaultModel,
+  customModels = [],
 }: ComposerProps) {
   const [value, setValue] = useState("");
   const [selectedModel, setSelectedModel] = useState(defaultModel || "");
@@ -28,8 +31,19 @@ export default function Composer({
   };
 
   // 取得當前平台的模型列表
+  // 自訂模型：platform 格式 "custom:<id>"，顯示其綁定的 modelId
+  const isCustomPlatform = defaultPlatform?.startsWith("custom:");
+  const customId = isCustomPlatform && defaultPlatform
+    ? defaultPlatform.slice("custom:".length)
+    : null;
+  const customModel = customId
+    ? customModels.find((m) => m.id === customId)
+    : undefined;
+
   const currentPlatformInfo = aiPlatforms.find((p) => p.id === defaultPlatform);
-  const availableModels = currentPlatformInfo?.models || [];
+  const availableModels = isCustomPlatform && customModel
+    ? [{ id: customModel.modelId, name: customModel.modelId }]
+    : currentPlatformInfo?.models || [];
 
   return (
     <div style={{ borderTop: "1px solid #333" }}>
