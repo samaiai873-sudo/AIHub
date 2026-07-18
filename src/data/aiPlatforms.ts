@@ -87,15 +87,4 @@ export const aiPlatforms: AIPlatform[] = [
       { id: "local-model", name: "本地載入模型" },
     ],
   },
-  {
-    id: "nvidia",
-    name: "NVIDIA Nemotron",
-    icon: "🟢",
-    url: "https://build.nvidia.com",
-    models: [
-      { id: "nemotron-3-ultra", name: "Nemotron 3 Ultra (53B)" },
-      { id: "nemotron-4-340b", name: "Nemotron 4 340B" },
-      { id: "nemotron-3-8b", name: "Nemotron 3 Ultra 8B" },
-    ],
-  },
 ];

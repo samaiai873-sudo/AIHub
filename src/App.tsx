@@ -204,7 +204,6 @@ export default function App() {
                 { id: "claude", label: "Anthropic / Claude" },
                 { id: "gemini", label: "Google / Gemini" },
                 { id: "grok", label: "xAI / Grok" },
-                { id: "nvidia", label: "NVIDIA Nemotron" },
               ].map((provider) => (
                 <div
                   key={provider.id}
