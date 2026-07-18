@@ -26,9 +26,38 @@ export function createCustomProvider(
         });
       }
 
+      // Endpoint 健全性檢查 — 早期失敗給清楚訊息，不要等到 fetch 拋「Failed to fetch」
+      if (!endpoint) {
+        return createFallbackReply({
+          platform: `custom:${customId}`,
+          model,
+          prompt,
+          error: "Endpoint 為空，請至 Settings 填入 OpenAI 相容 API 端點。",
+        });
+      }
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(endpoint);
+      } catch {
+        return createFallbackReply({
+          platform: `custom:${customId}`,
+          model,
+          prompt,
+          error: `Endpoint 無效：「${endpoint}」不是合法的 URL。`,
+        });
+      }
+      if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+        return createFallbackReply({
+          platform: `custom:${customId}`,
+          model,
+          prompt,
+          error: `Endpoint protocol 不支援：${parsedUrl.protocol}（需為 http: 或 https:）`,
+        });
+      }
+
       const callback = onChunk;
       const isStreaming = typeof callback === "function";
-      const url = `${endpoint}/chat/completions`;
+      const url = `${endpoint.replace(/\/$/, "")}/chat/completions`;
 
       try {
         const response = await fetch(url, {
@@ -128,8 +157,16 @@ export function createCustomProvider(
           usedFallback: false,
         };
       } catch (error) {
-        const message =
+        const rawMessage =
           error instanceof Error ? error.message : "未知錯誤";
+        // TypeError 是 fetch 層級失敗（CORS / 網路 / DNS / Mixed Content），
+        // 不是 HTTP 錯誤碼。把嘗試的 URL 一起帶上協助 debug。
+        const isNetworkError =
+          error instanceof TypeError ||
+          /Failed to fetch|NetworkError|Load failed/i.test(rawMessage);
+        const message = isNetworkError
+          ? `${rawMessage}（URL: ${url}）。可能為 CORS、網路或 Mixed Content 問題。`
+          : rawMessage;
         return createFallbackReply({
           platform: `custom:${customId}`,
           model,
