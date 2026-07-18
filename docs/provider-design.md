@@ -22,10 +22,10 @@ interface AIProvider {
 | Claude | `claudeProvider.ts` | SSE | `api.anthropic.com/v1/messages` |
 | Gemini | `geminiProvider.ts` | SSE (`alt=sse`) | `generativelanguage.googleapis.com/v1beta` |
 | Grok | `grokProvider.ts` | SSE | `api.x.ai/v1/chat/completions` |
-| Ollama | `ollamaProvider.ts` | SSE | `localhost:11434` |
-| LM Studio | `lmstudioProvider.ts` | SSE | `localhost:1234/v1` |
-| NVIDIA | `nvidiaProvider.ts` | SSE | `integrate.api.nvidia.com/v1` |
+| Local | `localProvider.ts` | SSE | OpenAI 相容端點（預設 `localhost:1234/v1`，可切 `localhost:11434/v1`） |
 | Custom | `customProvider.ts` | SSE | 使用者自訂端點 (OpenAI 相容) |
+
+> **Local Provider 說明**：Ollama 與 LM Studio 兩者皆實作 OpenAI 相容 API（`/v1/chat/completions`、`/v1/models`），因此合併為單一 `local` Provider。使用者於 Settings 選擇對應 Base URL（或點快速preset 按鈕切換）即可。UI 模型列表為靜態預設，可於 Provider 內呼叫 `fetchLocalModels()` 動態從 `/v1/models` 抓取。
 
 ## Custom Provider
 

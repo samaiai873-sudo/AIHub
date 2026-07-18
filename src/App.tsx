@@ -12,6 +12,20 @@ import useAppSettings from "./hooks/useAppSettings";
 import useApiKeys from "./hooks/useApiKeys";
 import { useConversationContext } from "./context/useConversationContext";
 import usePrompts from "./hooks/usePrompts";
+import {
+  getLocalBaseUrl,
+  setLocalBaseUrl,
+} from "./providers/localProvider";
+
+const QUICK_PRESET_BUTTON_STYLE: React.CSSProperties = {
+  padding: "6px 10px",
+  borderRadius: 8,
+  border: "1px solid #444",
+  background: "#2b2b2b",
+  color: "white",
+  fontSize: 12,
+  cursor: "pointer",
+};
 
 export default function App() {
   const [page, setPage] = useState<
@@ -22,6 +36,14 @@ export default function App() {
   const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(
     !localStorage.getItem("aihub-first-time-setup")
   );
+
+  // 本地推理 Base URL（寫入 localStorage，並用 React state 觸發重 render）
+  const [localBaseUrl, setLocalBaseUrlState] = useState(getLocalBaseUrl());
+  const updateLocalBaseUrl = (url: string) => {
+    setLocalBaseUrl(url);
+    setLocalBaseUrlState(url);
+  };
+
 
   const { conversations } = useConversationContext();
   const { prompts } = usePrompts();
@@ -258,48 +280,56 @@ export default function App() {
                 </div>
               ))}
 
-              {/* Local Providers (Ollama / LM Studio) - No API Key needed, but configurable endpoints */}
+              {/* Local Provider (Ollama / LM Studio 統一介面) */}
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #333" }}>
                 <h4 style={{ marginTop: 0, marginBottom: 12, color: "#8bc98b" }}>
-                  🏠 本地模型設定 (無需 API Key)
+                  💻 本地模型設定 (無需 API Key)
                 </h4>
                 <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
-                  本地模型不需要 API Key，但需確保本地服務正在運行
+                  本地推理統一走 OpenAI 相容 API。Ollama 與 LM Studio 各自啟用相容端點後擇一切換即可，不必分別設定。
                 </p>
 
-                {[
-                  { id: "ollama", label: "Ollama", defaultUrl: "http://localhost:11434", key: "ollama-base-url" },
-                  { id: "lmstudio", label: "LM Studio", defaultUrl: "http://localhost:1234/v1", key: "lmstudio-base-url" },
-                ].map((provider) => (
-                  <div key={provider.id} style={{ marginBottom: 12 }}>
-                    <div style={{ marginBottom: 6, fontWeight: 600 }}>
-                      {provider.label} 服務位址
-                    </div>
-                    <input
-                      type="text"
-                      value={apiKeys[provider.key] ?? provider.defaultUrl}
-                      onChange={(event) =>
-                        updateApiKey(provider.key, event.target.value)
-                      }
-                      placeholder={`輸入 ${provider.label} 服務位址 (預設: ${provider.defaultUrl})`}
-                      style={{
-                        width: "100%",
-                        padding: 10,
-                        borderRadius: 8,
-                        border: "1px solid #555",
-                        boxSizing: "border-box",
-                        marginBottom: 6,
-                        fontSize: 13,
-                        fontFamily: "monospace",
-                      }}
-                    />
-                    <div style={{ color: "#888", fontSize: 12 }}>
-                      需先啟動 {provider.label} 服務: <code style={{ color: "#8bc98b" }}>
-                        {provider.id === "ollama" ? "ollama serve" : "LM Studio → Developer → Start Local Server"}
-                      </code>
-                    </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ marginBottom: 6, fontWeight: 600 }}>
+                    本機服務端點 (OpenAI 相容 Base URL)
                   </div>
-                ))}
+                  <input
+                    type="text"
+                    value={localBaseUrl}
+                    onChange={(event) => updateLocalBaseUrl(event.target.value.trim())}
+                    placeholder="http://localhost:1234/v1"
+                    style={{
+                      width: "100%",
+                      padding: 10,
+                      borderRadius: 8,
+                      border: "1px solid #555",
+                      boxSizing: "border-box",
+                      marginBottom: 6,
+                      fontSize: 13,
+                      fontFamily: "monospace",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                    <button
+                      onClick={() => updateLocalBaseUrl("http://localhost:1234/v1")}
+                      style={QUICK_PRESET_BUTTON_STYLE}
+                    >
+                      LM Studio (1234)
+                    </button>
+                    <button
+                      onClick={() => updateLocalBaseUrl("http://localhost:11434/v1")}
+                      style={QUICK_PRESET_BUTTON_STYLE}
+                    >
+                      Ollama (11434)
+                    </button>
+                  </div>
+                  <div style={{ color: "#888", fontSize: 12 }}>
+                    啟動方式:
+                    <code style={{ color: "#8bc98b", marginLeft: 6 }}>ollama serve</code>
+                    {" / "}
+                    <code style={{ color: "#8bc98b" }}>LM Studio → Developer → Start Local Server</code>
+                  </div>
+                </div>
               </div>
 
               {/* Custom Models */}

@@ -7,14 +7,14 @@ export const DEFAULT_MODELS: Record<Platform, string> = {
   claude: "sonnet-5",
   gemini: "gemini-flash-latest",
   grok: "grok-4.5",
-  ollama: "llama3.1",
-  lmstudio: "local-model",
+  local: "local-model",
 };
 
 // 全域預設模型（當無法決定時使用）
 export const GLOBAL_DEFAULT_MODEL = "gpt-5.6-sol";
 
 // UI 層 model id 列表（用於驗證與下拉選單）
+// local 的模型從本機 /v1/models 動態抓（這裡給予 fallback 預設值）
 export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
   chatgpt: ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
   claude: ["sonnet-5", "opus-4", "haiku-4", "sonnet-3.5", "haiku-3.5", "opus-3"],
@@ -28,8 +28,7 @@ export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
     "gemini-2.5-pro",
   ],
   grok: ["grok-4.5", "grok-4"],
-  ollama: ["llama3.1", "llama3.2", "qwen2.5", "mistral", "codellama"],
-  lmstudio: ["local-model"],
+  local: ["local-model", "llama3.1", "llama3.2", "qwen2.5", "mistral", "codellama"],
 } as const;
 
 // 取得平台的預設模型

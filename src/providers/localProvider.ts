@@ -1,28 +1,35 @@
 /**
- * LM Studio Provider - 本地模型支援 (OpenAI 相容 API)
- * 
- * API 文件: https://lmstudio.ai/docs/api
- * 預設端點: http://localhost:1234/v1
- * 
- * LM Studio 提供與 OpenAI 相容的 /v1/chat/completions 和 /v1/models 端點
+ * Local Provider - 統一的本機推理 Provider（相容 OpenAI API）
+ *
+ * 同時支援 Ollama 與 LM Studio：
+ * - Ollama 啟用 OpenAI 相容端點 (http://localhost:11434/v1)
+ * - LM Studio 本地伺服器 (http://localhost:1234/v1)
+ *
+ * 兩者都實作 /v1/chat/completions 與 /v1/models，
+ * 差異只是 port 與 base URL，使用者可在 Settings 切換。
+ *
+ * API 相容性參考：
+ * - Ollama: https://github.com/ollama/ollama/blob/main/docs/openai.md
+ * - LM Studio: https://lmstudio.ai/docs/api
  */
 import type { AIProvider, SendMessageParams, AssistantReply } from "./types";
 
 const DEFAULT_BASE_URL = "http://localhost:1234/v1";
+const STORAGE_KEY_BASE_URL = "local-base-url";
 
-interface LMStudioModel {
+interface OpenAIModel {
   id: string;
   object: string;
   created: number;
   owned_by: string;
 }
 
-interface LMStudioModelsResponse {
+interface OpenAIModelsResponse {
   object: string;
-  data: LMStudioModel[];
+  data: OpenAIModel[];
 }
 
-interface LMStudioChatRequest {
+interface OpenAIChatRequest {
   model: string;
   messages: Array<{ role: string; content: string }>;
   stream?: boolean;
@@ -31,27 +38,23 @@ interface LMStudioChatRequest {
   max_tokens?: number;
 }
 
-interface LMStudioChatResponse {
+interface OpenAIChatResponse {
   id: string;
-  object: string;
-  created: number;
   model: string;
   choices: Array<{
     index: number;
     message: { role: string; content: string };
     finish_reason: string;
   }>;
-  usage: {
+  usage?: {
     prompt_tokens: number;
     completion_tokens: number;
     total_tokens: number;
   };
 }
 
-interface LMStudioChatStreamChunk {
+interface OpenAIChatStreamChunk {
   id: string;
-  object: string;
-  created: number;
   model: string;
   choices: Array<{
     index: number;
@@ -60,29 +63,40 @@ interface LMStudioChatStreamChunk {
   }>;
 }
 
-function getBaseUrl(): string {
-  return localStorage.getItem("lmstudio-base-url") ?? DEFAULT_BASE_URL;
+export function getBaseUrl(): string {
+  return localStorage.getItem(STORAGE_KEY_BASE_URL) ?? DEFAULT_BASE_URL;
 }
 
-function setBaseUrl(url: string): void {
-  localStorage.setItem("lmstudio-base-url", url);
+export function setBaseUrl(url: string): void {
+  localStorage.setItem(STORAGE_KEY_BASE_URL, url);
 }
 
-async function fetchModels(): Promise<string[]> {
+/** 動態從本機端點抓可用模型列表（給 UI 下拉用） */
+export async function fetchLocalModels(): Promise<string[]> {
   try {
     const response = await fetch(`${getBaseUrl()}/models`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data: LMStudioModelsResponse = await response.json();
+    const data: OpenAIModelsResponse = await response.json();
     return data.data.map((m) => m.id);
   } catch (error) {
-    console.error("Failed to fetch LM Studio models:", error);
+    console.error("Failed to fetch local models:", error);
     return [];
   }
 }
 
+/** 偵測本機服務是否可用 */
+export async function isLocalAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch(`${getBaseUrl()}/models`, { method: "GET" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 async function chatComplete(
-  params: LMStudioChatRequest
-): Promise<LMStudioChatResponse> {
+  params: OpenAIChatRequest
+): Promise<OpenAIChatResponse> {
   const response = await fetch(`${getBaseUrl()}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -90,7 +104,9 @@ async function chatComplete(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: { message: "Unknown error" } }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: { message: "Unknown error" } }));
     throw new Error(error.error?.message ?? `HTTP ${response.status}`);
   }
 
@@ -98,7 +114,7 @@ async function chatComplete(
 }
 
 async function* streamChatComplete(
-  params: LMStudioChatRequest
+  params: OpenAIChatRequest
 ): AsyncGenerator<string> {
   const response = await fetch(`${getBaseUrl()}/chat/completions`, {
     method: "POST",
@@ -107,7 +123,9 @@ async function* streamChatComplete(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: { message: "Unknown error" } }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: { message: "Unknown error" } }));
     throw new Error(error.error?.message ?? `HTTP ${response.status}`);
   }
 
@@ -128,16 +146,16 @@ async function* streamChatComplete(
 
       for (const line of lines) {
         if (!line.trim() || !line.startsWith("data: ")) continue;
-        
+
         const data = line.slice(6); // 移除 "data: "
         if (data === "[DONE]") return;
 
         try {
-          const chunk: LMStudioChatStreamChunk = JSON.parse(data);
+          const chunk: OpenAIChatStreamChunk = JSON.parse(data);
           const content = chunk.choices[0]?.delta?.content;
           if (content) yield content;
         } catch {
-          // 忽略解析錯誤
+          // 忽略解析錯誤（心跳行、不完整片段）
         }
       }
     }
@@ -146,32 +164,30 @@ async function* streamChatComplete(
   }
 }
 
-export const lmstudioProvider: AIProvider = {
-  id: "lmstudio",
-  name: "LM Studio (本地模型)",
+export const localProvider: AIProvider = {
+  id: "local",
+  name: "Local (Ollama / LM Studio)",
   supportsStreaming: true,
   defaultModel: "local-model",
 
   async sendMessage(params: SendMessageParams): Promise<AssistantReply> {
     const { prompt, model, onChunk } = params;
 
-    // 檢查 LM Studio 服務是否可用
-    try {
-      await fetch(`${getBaseUrl()}/models`, { method: "GET" });
-    } catch {
+    // 檢查本機服務是否可用
+    const available = await isLocalAvailable();
+    if (!available) {
       return {
         content: "",
-        provider: "lmstudio",
+        provider: "local",
         model,
         usedFallback: false,
-        error: "無法連線到 LM Studio 服務。請確認 LM Studio 是否正在運行並已啟動本地伺服器 (http://localhost:1234)。",
+        error: `無法連線到本機推理服務。請確認 Ollama 或 LM Studio 正在運行，且已啟用 OpenAI 相容 API。預設端點：${getBaseUrl()}（可至 Settings 切換）`,
       };
     }
 
-    // 轉換 prompt 為 messages 格式
     const messages = [{ role: "user", content: prompt }];
 
-    const requestParams: LMStudioChatRequest = {
+    const requestParams: OpenAIChatRequest = {
       model,
       messages,
       stream: !!onChunk,
@@ -189,7 +205,7 @@ export const lmstudioProvider: AIProvider = {
         }
         return {
           content: fullContent,
-          provider: "lmstudio",
+          provider: "local",
           model,
           usedFallback: false,
         };
@@ -198,7 +214,7 @@ export const lmstudioProvider: AIProvider = {
         const response = await chatComplete(requestParams);
         return {
           content: response.choices[0]?.message?.content ?? "",
-          provider: "lmstudio",
+          provider: "local",
           model,
           usedFallback: false,
         };
@@ -206,13 +222,14 @@ export const lmstudioProvider: AIProvider = {
     } catch (error) {
       return {
         content: "",
-        provider: "lmstudio",
+        provider: "local",
         model,
         usedFallback: false,
-        error: error instanceof Error ? error.message : "LM Studio 發生未知錯誤",
+        error:
+          error instanceof Error ? error.message : "本機推理發生未知錯誤",
       };
     }
   },
 };
 
-export { fetchModels, getBaseUrl, setBaseUrl };
+export { getBaseUrl as getLocalBaseUrl, setBaseUrl as setLocalBaseUrl };

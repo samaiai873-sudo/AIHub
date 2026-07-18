@@ -4,8 +4,7 @@ export type Platform =
   | "claude"
   | "gemini"
   | "grok"
-  | "ollama"
-  | "lmstudio";
+  | "local";
 
 // 預設平台
 export const DEFAULT_PLATFORM: Platform = "chatgpt";
@@ -16,8 +15,7 @@ export const SUPPORTED_PLATFORMS: Platform[] = [
   "claude",
   "gemini",
   "grok",
-  "ollama",
-  "lmstudio",
+  "local",
 ];
 
 // 驗證字串是否為有效的 Platform
