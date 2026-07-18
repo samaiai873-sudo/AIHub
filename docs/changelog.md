@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-07-18
+
+### ✨ Added
+- **CustomModels「修改」按鈕**: Settings 自訂模型列表新增「修改」按鈕，支援原地編輯自訂模型（名稱、端點、模型 ID、API Key）。編輯模式保留原 model id，不破壞既有 Conversation 引用。
+- **Local Provider**: 新增 `localProvider.ts`，統一介面支援 Ollama 與 LM Studio（兩者皆實作 OpenAI 相容 API）。
+- **Settings 本機服務端點切換**: 輸入框 + 「LM Studio (1234)」「Ollama (11434)」preset 按鈕，一鍵切換本機推理後端。
+
+### 🔧 Fixed
+- **自訂模型 platform 無法選取與生效**: 所有 `isPlatform()` 驗證對 `custom:<id>` 都回 false，silently fallback 到 `chatgpt`。改用新增的 `isValidPlatformId()`，全鏈路支援 `custom:<id>`。
+  - `useConversations.ts` 4 處：normalizeConversation / createConversation / changeConversationPlatform / regenerateWith
+  - `regenerateWith` custom 的 API Key 改從 `settings.customModels[customId].apiKey` 讀取（原本錯走 `aihub-api-keys` 加密 map）
+  - `ConversationWorkspace.handleSend` 統一 API Key 處理（custom 走 customModels，內建走 apiKeys）
+  - `Conversation.platform` 型別放寬為 string（含內建 Platform 與 `custom:<id>`）
+  - 新增 `platforms.ts` 的 `isCustomPlatformId()` / `getCustomIdFromPlatformId()` / `isValidPlatformId()`
+  - `models.ts` 的 `getDefaultModel` / `isValidModelForPlatform` 對 custom 不再 silent fallback
+
+### ♻️ Changed
+- **合併 Ollama + LM Studio**: 高度重複的兩個本機 Provider 合併為單一 `local` Provider。
+  - 刪除 `ollamaProvider.ts` 與 `lmstudioProvider.ts`
+  - 新檔走 OpenAI 相容 `/v1/chat/completions` + `/v1/models` 端點
+  - Sidebar 從 🦙 / 🧪 兩個按鈕合併為單一 💻 Local (Ollama / LM Studio)
+  - `Platform` type 從 7 個（chatgpt/claude/gemini/grok/ollama/lmstudio/nvidia）縮為 5 個（chatgpt/claude/gemini/grok/local）
+
+### 🗑️ Removed
+- **NVIDIA Nemotron Provider**: 刪除 `nvidiaProvider.ts`、`aiPlatforms.ts` / `platforms.ts` / `models.ts` 的 nvidia 項目、Settings 的 NVIDIA API Key 輸入框。
+- **Ollama / LM Studio 獨立 Provider**: 合併為 `local`（見上方 Changed）
+
+---
+
 ## [1.0.2] - 2026-07-17
 
 ### ✨ Added

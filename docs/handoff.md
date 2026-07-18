@@ -1,7 +1,7 @@
 # AIHub 專案交接文件
 
-> **版本**: 1.0.2  
-> **更新日期**: 2026-07-17  
+> **版本**: 1.1.0  
+> **更新日期**: 2026-07-18  
 > **專案狀態**: 生產就緒，可提交 Chrome Web Store 審核
 
 ---
@@ -9,7 +9,7 @@
 ## 1. 專案概覽
 
 ### 1.1 專案定位
-AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等 7 種 AI 提供商，加上**自訂模型**（OpenAI 相容 API 端點），整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定端到端加密**儲存（無需主密碼）。
+AIHub 是一個多 AI 聊天介面，支援 ChatGPT、Claude、Gemini、Grok、Local (Ollama / LM Studio 統一介面) 等 5 種內建 AI Provider，加上自訂模型（OpenAI 相容 API 端點）可任意擴充，整合 Model Context Protocol (MCP) 支援本地工具調用，採用瀏覽器綁定端到端加密儲存（無需主密碼）。
 
 ### 1.2 技術棧
 | 層級 | 技術 |
@@ -71,15 +71,13 @@ interface AIProvider {
 - `claudeProvider.ts` — Anthropic API (SSE 串流)
 - `geminiProvider.ts` — Google Gemini API (SSE 串流, `alt=sse`)
 - `grokProvider.ts` — xAI API (SSE 串流) **v1.0.2 新增**
-- `ollamaProvider.ts` — 本地 Ollama API
-- `lmstudioProvider.ts` — 本地 LM Studio API
-- `nvidiaProvider.ts` — NVIDIA Nemotron API
+- `localProvider.ts` — 本機推理統一介面 (Ollama / LM Studio 合併) **v1.1.0 重構**
 - `customProvider.ts` — 自訂 OpenAI 相容 API **v1.0.2 新增**
 
 **註冊**: `src/providers/registry.ts` - 統一管理所有 Provider
 
-#### Custom Provider (自訂模型) **v1.0.2 新增**
-- 用戶從 Settings → 自訂模型新增（名稱、端點、模型 ID、API Key）
+#### Custom Provider (自訂模型) **v1.0.2 新增 / v1.1.0 支援修改**
+- 用戶從 Settings → 自訂模型新增 / 修改 / 移除（名稱、端點、模型 ID、API Key）
 - platform id 格式：`custom:<id>`
 - `generateAssistantReply` 偵測 `custom:` 前綴後動態建立 provider
 - 自訂模型顯示於左側 `Sidebar` AI Agents 列表，點擊即建立對話
@@ -113,7 +111,7 @@ providers/index.ts → generateAssistantReply()
     ↓
 Provider Registry → getProvider(platform)
     ↓
-Specific Provider (chatgpt/claude/gemini/grok/ollama/lmstudio/nvidia/custom)
+Specific Provider (chatgpt/claude/gemini/grok/local/custom)
     ↓
 API Call (fetch + streaming)
     ↓
@@ -228,7 +226,7 @@ interface Message {
   originalModel?: string;  // 原始模型（重新生成時保留）
 }
 
-### 4.4 支援的平台 (7 個 + 自訂)
+### 4.4 支援的平台 (5 個內建 + 自訂)
 
 | Platform | ID | 預設模型 | 串流 |
 |----------|----|----------|------|
@@ -236,10 +234,10 @@ interface Message {
 | Claude | `claude` | `sonnet-5` | SSE |
 | Gemini | `gemini` | `gemini-flash-latest` | SSE (`alt=sse`) |
 | Grok | `grok` | `grok-4.5` | SSE |
-| Ollama | `ollama` | `llama3.1` | SSE |
-| LM Studio | `lmstudio` | `local-model` | SSE |
-| NVIDIA | `nvidia` | `nemotron-3-ultra` | SSE |
+| Local (Ollama / LM Studio) | `local` | `local-model` | SSE |
 | Custom | `custom:<id>` | 使用者指定 | SSE |
+
+> v1.1.0 起 Ollama 與 LM Studio 合併為單一 `local` Provider，使用者於 Settings 切換 Base URL 即可。NVIDIA Nemotron 已移除。
 ```
 
 ---
@@ -279,7 +277,7 @@ npm run build        # 輸出到 dist/
 |------|----------|
 | `host_permissions: <all_urls>` 審核不過 | 僅用於 AI API 直連，不存取網頁內容，提供權限說明文件 |
 | Native Messaging 無法連線 | 確認 `install.py` 已執行，檢查 manifest 路徑 |
-| Ollama/LM Studio 連線失敗 | 確認本地服務啟動，檢查端點 URL |
+| 本機推理（Ollama / LM Studio）連線失敗 | 確認本地服務啟動，至 Settings → 本機服務端點檢查 Base URL（LM Studio 1234 / Ollama 11434） |
 | Gemini API 回應為空 | 確認串流使用 `alt=sse` 參數 (v1.0.2 修復) |
 | Reply with... 失敗 | `regenerateWith` 需用 `secureStorage.getItem` 解密讀取 (v1.0.2 修復) |
 | 加密解密失敗 | 檢查瀏覽器是否支援 Web Crypto API，確認 localStorage 金鑰存在 |
@@ -300,12 +298,13 @@ npm run build        # 輸出到 dist/
 | Gemini Provider | `src/providers/geminiProvider.ts` |
 | Grok Provider | `src/providers/grokProvider.ts` |
 | Custom Provider | `src/providers/customProvider.ts` |
+| Local Provider (Ollama / LM Studio) | `src/providers/localProvider.ts` |
 | 加密核心 | `src/utils/secureStorage.ts` |
 | 安全儲存 Hook | `src/hooks/useSecureLocalStorage.ts` |
 | 對話狀態 | `src/context/ConversationContext.tsx` |
 | API Keys 管理 | `src/hooks/useApiKeys.ts` |
 | 設定管理 + 自訂模型 | `src/hooks/useAppSettings.ts` |
-| 自訂模型 UI | `src/components/CustomModels.tsx` |
+| 自訂模型 UI (新增 / 修改 / 移除) | `src/components/CustomModels.tsx` |
 | 左側導航 (含自訂模型) | `src/components/Sidebar.tsx` |
 | Extension Background | `extension/background/background.js` |
 | Native Messaging Host | `extension/native-host/aihub_native_host.py` |
@@ -328,6 +327,20 @@ npm run build        # 輸出到 dist/
 ---
 
 ## 9. 版本歷程與重大變更
+
+### v1.1.0 (2026-07-18)
+- ✅ 修復自訂模型 platform 無法選取與生效的問題（`isPlatform` → `isValidPlatformId`，全鏈路支援 `custom:<id>`）
+- ✅ `useConversations` 4 處修正：normalizeConversation / createConversation / changeConversationPlatform / regenerateWith
+- ✅ `regenerateWith` 對 custom 改從 `settings.customModels[customId].apiKey` 讀 API Key
+- ✅ `ConversationWorkspace.handleSend` 統一 API Key 處理（custom 走 customModels，內建走 apiKeys）
+- ✅ `Conversation.platform` 型別放寬為 string（含內建 Platform 與 `custom:<id>`）
+- ✅ 刪除 NVIDIA Nemotron Provider
+- ✅ 合併 Ollama + LM Studio 為單一 `local` Provider（OpenAI 相容 API）
+  - 新增 `localProvider.ts`，刪除 `ollamaProvider.ts` + `lmstudioProvider.ts`
+  - Settings 提供 Base URL 輸入框 + LM Studio (1234) / Ollama (11434) 快速 preset 按鈕
+- ✅ `CustomModels.tsx` 支援「修改」按鈕（原僅新增 / 移除）：
+  - 編輯模式保留原 model id（不破壞既有 Conversation 引用）
+  - 移除前加確認對話框
 
 ### v1.0.2 (2026-07-17)
 - ✅ 實作 Grok Provider（xAI API，grok-4.5/grok-4，SSE 串流）
@@ -363,5 +376,5 @@ npm run build        # 輸出到 dist/
 
 ---
 
-*文件版本: 1.0.2 | 最後更新: 2026-07-17*  
+*文件版本: 1.1.0 | 最後更新: 2026-07-18*  
 *此文件應隨專案演進持續更新*

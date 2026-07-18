@@ -153,3 +153,4 @@
 | 1.0.0 | 2026-07-15 | Sprint 12 Test/CI/CD + **移除主密碼** + Extension 完整 |
 | 1.0.1 | 2026-07-16 | Sprint 13 Gemini 修正 + Nemotron + Custom Models |
 | 1.0.2 | 2026-07-17 | Sprint 14 **Grok Provider** + **自訂模型整合** + Bug 修復 + 死碼清理 |
+| 1.1.0 | 2026-07-18 | Sprint 15 **修復自訂模型 platform** + **合併 Ollama/LM Studio 為 Local** + **刪除 NVIDIA** + **CustomModels 修改按鈕** |

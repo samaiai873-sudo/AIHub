@@ -34,9 +34,9 @@ UI Components → Context → Hooks → Providers → External APIs
 - `useSecureLocalStorage` — 異步加密儲存
 - `useAppSettings` — 應用設定 + 自訂模型 + 路由規則
 
-### Providers (7 個 + Custom)
-- `chatgptProvider` / `claudeProvider` / `geminiProvider`
-- `grokProvider` / `ollamaProvider` / `lmstudioProvider` / `nvidiaProvider`
+### Providers (5 個 + Custom)
+- `chatgptProvider` / `claudeProvider` / `geminiProvider` / `grokProvider`
+- `localProvider` — 統一本機推理（Ollama / LM Studio，OpenAI 相容 API）
 - `customProvider` — OpenAI 相容 API，動態建立
 
 ### Utilities

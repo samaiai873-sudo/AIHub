@@ -31,9 +31,7 @@ src/
 │   ├── claudeProvider.ts
 │   ├── geminiProvider.ts
 │   ├── grokProvider.ts
-│   ├── ollamaProvider.ts
-│   ├── lmstudioProvider.ts
-│   ├── nvidiaProvider.ts
+│   ├── localProvider.ts        # 合併 Ollama + LM Studio (OpenAI 相容 API)
 │   ├── customProvider.ts
 │   ├── registry.ts
 │   ├── types.ts
