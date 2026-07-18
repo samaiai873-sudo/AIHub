@@ -3,7 +3,8 @@ import { useMemo } from "react";
 import useLocalStorage from "./useLocalStorage";
 import {
   DEFAULT_PLATFORM,
-  isPlatform,
+  isCustomPlatformId,
+  isValidPlatformId,
   type Platform,
 } from "../constants/platforms";
 import { getDefaultModel, isValidModelForPlatform } from "../constants/models";
@@ -13,6 +14,7 @@ import type {
 } from "../types/conversation";
 import { generateAssistantReply } from "../providers";
 import { secureStorage } from "../utils/secureStorage";
+import type { CustomModel } from "./useAppSettings";
 
 // Options 型別定義（支援 Template、Prompt Library 等未來功能）
 export type CreateConversationOptions = {
@@ -50,18 +52,21 @@ function normalizeConversation(
 ): Conversation {
   const now = new Date().toISOString();
 
-  // 驗證並修正 platform
+  // 驗證並修正 platform（接受內建 Platform 或自訂模型 id "custom:<id>"）
   const rawPlatform = conversation.platform;
-  const platform = isPlatform(rawPlatform)
-    ? rawPlatform
+  const platform = isValidPlatformId(rawPlatform)
+    ? (rawPlatform as string)
     : DEFAULT_PLATFORM;
 
   // 取得該平台的預設模型（若儲存的 model 不屬於該平台則重置）
+  // 自訂模型沒有「內建預設」，保留原 model 即可
   const rawModel = conversation.model;
   const model =
     rawModel && isValidModelForPlatform(platform, rawModel)
       ? rawModel
-      : getDefaultModel(platform);
+      : isCustomPlatformId(platform)
+        ? (rawModel ?? "")
+        : getDefaultModel(platform);
 
   return {
     id: conversation.id,
@@ -101,14 +106,18 @@ export default function useConversations() {
   ) => {
     const now = new Date().toISOString();
 
-    // 驗證 platform
-    const validatedPlatform = isPlatform(platform)
+    // 驗證 platform（接受內建 Platform 或自訂模型 id "custom:<id>"）
+    const validatedPlatform = isValidPlatformId(platform)
       ? platform
       : DEFAULT_PLATFORM;
 
     // 取得該平台的預設模型（如果未指定）
+    // 自訂模型無內建預設，需由 caller 傳入 model，否則保留空字串
     const finalModel =
-      model ?? getDefaultModel(validatedPlatform);
+      model ??
+      (isCustomPlatformId(validatedPlatform)
+        ? ""
+        : getDefaultModel(validatedPlatform as Platform));
 
     const conversation: Conversation = {
       id: crypto.randomUUID(),
@@ -193,10 +202,14 @@ export default function useConversations() {
     model?: string
   ) => {
     const now = new Date().toISOString();
-    const validatedPlatform = isPlatform(platform)
+    const validatedPlatform = isValidPlatformId(platform)
       ? platform
       : DEFAULT_PLATFORM;
-    const finalModel = model ?? getDefaultModel(validatedPlatform);
+    const finalModel =
+      model ??
+      (isCustomPlatformId(validatedPlatform)
+        ? ""
+        : getDefaultModel(validatedPlatform as Platform));
 
     setConversations((prev) =>
       prev.map((conversation) =>
@@ -377,12 +390,15 @@ export default function useConversations() {
     if (userMessage.role !== "user") return;
 
     const prompt = userMessage.content;
-    const validatedPlatform = isPlatform(newPlatform)
+    const validatedPlatform = isValidPlatformId(newPlatform)
       ? newPlatform
       : DEFAULT_PLATFORM;
-    const finalModel = (newModel && isValidModelForPlatform(validatedPlatform, newModel))
-      ? newModel
-      : getDefaultModel(validatedPlatform);
+    // 自訂模型無內建預設，直接用傳入的 newModel（否則空字串）
+    const finalModel = isCustomPlatformId(validatedPlatform)
+      ? (newModel ?? "")
+      : (newModel && isValidModelForPlatform(validatedPlatform, newModel))
+        ? newModel
+        : getDefaultModel(validatedPlatform as Platform);
 
     // 標記正在重新生成
     setConversations((prev) =>
@@ -408,13 +424,27 @@ export default function useConversations() {
       })
     );
 
-    // 取得 API Key（從加密儲存解密）
+    // 讀取自訂模型設定（regenerateWith 在 hook 外部呼叫，需自取 settings）
+    const settingsRaw = localStorage.getItem("aihub-settings");
+    const customModels = settingsRaw
+      ? (JSON.parse(settingsRaw) as { customModels?: CustomModel[] })?.customModels ?? []
+      : [];
+
+    // 取得 API Key
+    // 內建 Provider：從加密儲存（aihub-api-keys）以 platform 為 key 讀取
+    // 自訂模型：API Key 直接放在 CustomModel.apiKey（明文），不需要外部 key map
     let apiKey: string | undefined;
-    try {
-      const raw = await secureStorage.getItem("aihub-api-keys");
-      apiKey = raw ? (JSON.parse(raw) as Record<string, string>)[validatedPlatform] : undefined;
-    } catch {
-      apiKey = undefined;
+    if (isCustomPlatformId(validatedPlatform)) {
+      const customId =
+        validatedPlatform.slice("custom:".length);
+      apiKey = customModels.find((m) => m.id === customId)?.apiKey;
+    } else {
+      try {
+        const raw = await secureStorage.getItem("aihub-api-keys");
+        apiKey = raw ? (JSON.parse(raw) as Record<string, string>)[validatedPlatform] : undefined;
+      } catch {
+        apiKey = undefined;
+      }
     }
 
     if (!apiKey) {
@@ -444,12 +474,6 @@ export default function useConversations() {
     }
 
     try {
-      // 讀取自訂模型設定（regenerateWith 在 hook 外部呼叫，需自取 settings）
-      const settingsRaw = localStorage.getItem("aihub-settings");
-      const customModels = settingsRaw
-        ? (JSON.parse(settingsRaw) as { customModels?: never[] })?.customModels ?? []
-        : [];
-
       // 呼叫新 Provider 產生回覆
       const reply = await generateAssistantReply({
         platform: validatedPlatform,

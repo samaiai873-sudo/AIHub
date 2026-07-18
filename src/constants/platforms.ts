@@ -29,3 +29,31 @@ export function isPlatform(value: unknown): value is Platform {
     SUPPORTED_PLATFORMS.includes(value as Platform)
   );
 }
+
+// 自訂模型 platform id 前綴
+export const CUSTOM_PLATFORM_PREFIX = "custom:";
+
+// 判斷是否為自訂模型 platform id（格式 "custom:<id>"）
+export function isCustomPlatformId(value: unknown): boolean {
+  return (
+    typeof value === "string" &&
+    value.startsWith(CUSTOM_PLATFORM_PREFIX) &&
+    value.length > CUSTOM_PLATFORM_PREFIX.length
+  );
+}
+
+// 從 custom platform id 抽出自訂模型的 id（"custom:abc" → "abc"）
+export function getCustomIdFromPlatformId(
+  platformId: string
+): string | null {
+  if (!isCustomPlatformId(platformId)) return null;
+  return platformId.slice(CUSTOM_PLATFORM_PREFIX.length);
+}
+
+/**
+ * 廣義 platform 驗證：接受內建 Platform 或自訂模型 id（"custom:<id>"）。
+ * 回傳後保證字串可安全存入 Conversation.platform 並被 Provider 層處理。
+ */
+export function isValidPlatformId(value: unknown): boolean {
+  return isPlatform(value) || isCustomPlatformId(value);
+}

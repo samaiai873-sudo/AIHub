@@ -11,7 +11,7 @@ import {
   downloadFile,
   generateConversationFilename,
 } from "../utils/conversationExport";
-import { isPlatform, type Platform } from "../constants/platforms";
+import { isCustomPlatformId, isValidPlatformId, type Platform } from "../constants/platforms";
 import { matchRoutingRule, stripRoutingPrefix } from "../constants/routing";
 import { getDefaultModel } from "../constants/models";
 
@@ -80,24 +80,44 @@ export default function ConversationWorkspace() {
 
     // Sprint 9: Conversation Routing — 優先匹配路由規則，可覆蓋 Composer 選擇與對話預設值
     const routingRule = matchRoutingRule(content, settings.routingRules);
-    let targetPlatform: Platform;
+    let targetPlatform: string;
     let targetModel: string;
 
     if (routingRule) {
       // 路由規則命中：使用規則指定的平台/模型，並移除前綴
       targetPlatform = routingRule.targetPlatform;
-      targetModel = routingRule.targetModel ?? getDefaultModel(targetPlatform);
+      const routedPlatform = isValidPlatformId(targetPlatform)
+        ? targetPlatform
+        : (targetPlatform as Platform);
+      targetModel = routingRule.targetModel ?? getDefaultModel(routedPlatform);
       content = stripRoutingPrefix(content, routingRule);
-      setLastUsedPlatform(targetPlatform);
     } else {
       // 無路由規則：優先使用 Composer 選擇的 platform/model，否則 fallback 到對話預設值
       const platformParam = platform || "";
-      targetPlatform = isPlatform(platformParam) ? platformParam : currentConversation.platform;
+      // 接受內建 Platform 或 "custom:<id>"
+      targetPlatform = isValidPlatformId(platformParam)
+        ? platformParam
+        : currentConversation.platform;
       targetModel = model || currentConversation.model;
-      setLastUsedPlatform(targetPlatform);
     }
 
-    const selectedApiKey = apiKeys[targetPlatform];
+    // 記住最後使用的內建 Platform（自訂模型不記錄，因為 setLastUsedPlatform 只收 Platform）
+    if (!isCustomPlatformId(targetPlatform)) {
+      setLastUsedPlatform(targetPlatform as Platform);
+    }
+
+    // 統一處理 API Key：
+    // 內建 Provider → apiKeys[targetPlatform]（加密儲存）
+    // 自訂模型 → settings.customModels[customId].apiKey
+    let selectedApiKey: string | undefined;
+    if (isCustomPlatformId(targetPlatform)) {
+      const customId = targetPlatform.slice("custom:".length);
+      selectedApiKey = settings.customModels?.find((m) => m.id === customId)?.apiKey;
+    } else if (isValidPlatformId(targetPlatform)) {
+      selectedApiKey = apiKeys[targetPlatform as Platform];
+    } else {
+      selectedApiKey = apiKeys[targetPlatform as Platform];
+    }
 
     addMessage(currentConversation.id, {
       role: "user",

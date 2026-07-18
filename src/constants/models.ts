@@ -1,4 +1,5 @@
 import type { Platform } from "./platforms";
+import { isCustomPlatformId } from "./platforms";
 
 // 各平台的預設模型（UI 層 model id）
 export const DEFAULT_MODELS: Record<Platform, string> = {
@@ -34,15 +35,22 @@ export const SUPPORTED_MODELS: Record<Platform, readonly string[]> = {
 } as const;
 
 // 取得平台的預設模型
-export function getDefaultModel(platform: Platform): string {
-  return DEFAULT_MODELS[platform];
+// 自訂模型 platform id ("custom:<id>") 由 caller 透過 customModel.modelId 指定，
+//此處回空字串代表「無內建預設」，呼叫端應已傳入 model。
+export function getDefaultModel(platform: Platform | string): string {
+  if (isCustomPlatformId(platform)) return "";
+  return DEFAULT_MODELS[platform as Platform] ?? GLOBAL_DEFAULT_MODEL;
 }
 
 // 驗證某平台的模型是否有效
 export function isValidModelForPlatform(
-  platform: Platform,
+  platform: Platform | string,
   model: string
 ): boolean {
-  const models = SUPPORTED_MODELS[platform];
+  if (isCustomPlatformId(platform)) {
+    // 自訂模型：任何非空 modelId 視為有效
+    return Boolean(model);
+  }
+  const models = SUPPORTED_MODELS[platform as Platform];
   return models ? models.includes(model as never) : false;
 }

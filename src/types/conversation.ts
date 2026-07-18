@@ -1,4 +1,6 @@
-import type { Platform } from "../constants/platforms";
+// Message 與 Conversation 型別定義
+// Conversation.platform 為 string，可為內建 Platform（"chatgpt"、"claude"…）
+// 或自訂模型 platform id（"custom:<id>"），由 normalizeConversation 驗證。
 
 export type Message = {
   id: string;
@@ -32,7 +34,8 @@ export type Conversation = {
 
   projectId: string | null;
 
-  platform: Platform;
+  // 內建 Platform 或自訂模型 platform id（"custom:<id>"）
+  platform: string;
 
   model: string;
 
