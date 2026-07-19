@@ -332,16 +332,42 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Custom Models */}
-              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #333" }}>
-                <h4 style={{ marginTop: 0, marginBottom: 12, color: "#87ceeb" }}>
-                  ⚙️ 自訂模型
-                </h4>
-                <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
-                  手動新增任意模型 (OpenAI 相容 API 格式)
-                </p>
-                <CustomModels />
-              </div>
+      {/* Custom Models */}
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #333" }}>
+        <h4 style={{ marginTop: 0, marginBottom: 12, color: "#87ceeb" }}>
+          ⚙️ 自訂模型
+        </h4>
+        <p style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>
+          手動新增任意模型 (OpenAI 相容 API 格式)
+        </p>
+
+        <div
+          style={{
+            padding: 12,
+            background: "#3a2e1f",
+            border: "1px solid #7a5e2e",
+            borderRadius: 8,
+            marginBottom: 16,
+            fontSize: 12,
+            color: "#e8c87a",
+            lineHeight: 1.6,
+          }}
+        >
+          ⚠️ <strong>CORS 限制提醒</strong>
+          <br />
+          純網頁版（Vercel 部署）對於「未開放 CORS」的 API 端點會被瀏覽器擋下，
+          例如 <code>NVIDIA NIM (integrate.api.nvidia.com)</code>、多數企業內部 API。
+          如果你必須連這類 API，請改用：
+          <ul style={{ margin: "6px 0 0 18px", padding: 0 }}>
+            <li>Chrome 擴充功能版（SidePanel，已開 <code>host_permissions</code>）</li>
+            <li>本身支援 CORS 的中繼服務（OpenRouter 等）</li>
+            <li>本機 localhost 服務（Ollama / LM Studio，本身允許跨來源）</li>
+          </ul>
+          錯誤訊息含「Failed to fetch」即多半為 CORS 擋下。
+        </div>
+
+        <CustomModels />
+      </div>
 
               {/* Reset All Data Section */}
               <div

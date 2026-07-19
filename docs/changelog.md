@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CustomModels「修改」按鈕**: Settings 自訂模型列表新增「修改」按鈕，支援原地編輯自訂模型（名稱、端點、模型 ID、API Key）。編輯模式保留原 model id，不破壞既有 Conversation 引用。
 - **Local Provider**: 新增 `localProvider.ts`，統一介面支援 Ollama 與 LM Studio（兩者皆實作 OpenAI 相容 API）。
 - **Settings 本機服務端點切換**: 輸入框 + 「LM Studio (1234)」「Ollama (11434)」preset 按鈕，一鍵切換本機推理後端。
+- **CORS 限制提醒框**: Settings → 自訂模型 區塊加上黃色警示框，列出會被瀏覽器 CORS 擋下的情境（NVIDIA NIM 等）與替代方案（擴充功能版 / OpenRouter / 本機服務）。
 
 ### 🔧 Fixed
 - **自訂模型 platform 無法選取與生效**: 所有 `isPlatform()` 驗證對 `custom:<id>` 都回 false，silently fallback 到 `chatgpt`。改用新增的 `isValidPlatformId()`，全鏈路支援 `custom:<id>`。
@@ -22,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Conversation.platform` 型別放寬為 string（含內建 Platform 與 `custom:<id>`）
   - 新增 `platforms.ts` 的 `isCustomPlatformId()` / `getCustomIdFromPlatformId()` / `isValidPlatformId()`
   - `models.ts` 的 `getDefaultModel` / `isValidModelForPlatform` 對 custom 不再 silent fallback
+- **自訂模型「Failed to fetch」誤導訊息**: `createFallbackReply` 舊文案對所有錯誤都叫人填 API Key，但「Failed to fetch」其實是 fetch 層級錯誤（CORS / 網路 / 無效 URL）。改為分三種情況給不同提示：
+  - 缺 API Key（保留原行為）
+  - 含 `Failed to fetch` / `NetworkError` → 顯示 CORS / 網路 / Mixed Content 可能原因
+  - HTTP 4xx/5xx → 顯示原 error 並引導檢查完整設定
+- **customProvider endpoint 健全性檢查**: 在 fetch 前先檢查 endpoint 空字串、非法 URL、非 http(s) protocol，避免把問題丟給 fetch 拋「Failed to fetch」難以 debug。fetch catch 區分 `TypeError`（網路/CORS）vs 一般 Error，網路錯誤帶上嘗試的 URL。
 
 ### ♻️ Changed
 - **合併 Ollama + LM Studio**: 高度重複的兩個本機 Provider 合併為單一 `local` Provider。

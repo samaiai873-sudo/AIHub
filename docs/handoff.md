@@ -82,6 +82,19 @@ interface AIProvider {
 - `generateAssistantReply` 偵測 `custom:` 前綴後動態建立 provider
 - 自訂模型顯示於左側 `Sidebar` AI Agents 列表，點擊即建立對話
 
+#### CORS 限制（純網頁版重要須知）**v1.1.0 新增**
+純網頁版（Vercel / npm run dev 等瀏覽器環境）對於「未開放 CORS」的 API 端點會被瀏覽器擋下 fetch，錯誤訊息為 `Failed to fetch`：
+
+- NVIDIA NIM (`integrate.api.nvidia.com`) 等官方雲端 API 通常不開放 CORS
+- 多數企業內部 API 也未開放 CORS
+
+解法：
+1. 使用 Chrome 擴充功能版（SidePanel）— `manifest.json` 已開 `host_permissions: <all_urls>`，可繞過 CORS
+2. 改用本身支援 CORS 的中繼服務（如 OpenRouter）
+3. 使用本機 localhost 服務（Ollama / LM Studio）— 本身允許跨來源
+
+Settings → 自訂模型 區塊有黃色提醒框，列出上述限制。
+
 #### Context Pattern (狀態管理)
 **Context 列表**:
 - `ConversationContext` - 對話 CRUD、搜尋、分支
@@ -278,6 +291,7 @@ npm run build        # 輸出到 dist/
 | `host_permissions: <all_urls>` 審核不過 | 僅用於 AI API 直連，不存取網頁內容，提供權限說明文件 |
 | Native Messaging 無法連線 | 確認 `install.py` 已執行，檢查 manifest 路徑 |
 | 本機推理（Ollama / LM Studio）連線失敗 | 確認本地服務啟動，至 Settings → 本機服務端點檢查 Base URL（LM Studio 1234 / Ollama 11434） |
+| 自訂模型「Failed to fetch」 | 多為 CORS 擋下（如 NVIDIA NIM 未開放 CORS）。網頁版請改用擴充功能版、OpenRouter 或本機服務。詳見 §2.1 CORS 限制 |
 | Gemini API 回應為空 | 確認串流使用 `alt=sse` 參數 (v1.0.2 修復) |
 | Reply with... 失敗 | `regenerateWith` 需用 `secureStorage.getItem` 解密讀取 (v1.0.2 修復) |
 | 加密解密失敗 | 檢查瀏覽器是否支援 Web Crypto API，確認 localStorage 金鑰存在 |
