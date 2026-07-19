@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-07-18
 
 ### ✨ Added
+- **多模型同時回答 (Sprint 16)**: 對話框上方新增 4 個 AI 選擇欄 `ReplyTargetBar.tsx`，每個可選 N/A（不參與）或任一內建 / 自訂模型。送出後所有非 N/A target 並行打 API，各自回覆加到對話中。選擇持久化到 localStorage。
 - **CustomModels「修改」按鈕**: Settings 自訂模型列表新增「修改」按鈕，支援原地編輯自訂模型（名稱、端點、模型 ID、API Key）。編輯模式保留原 model id，不破壞既有 Conversation 引用。
 - **Local Provider**: 新增 `localProvider.ts`，統一介面支援 Ollama 與 LM Studio（兩者皆實作 OpenAI 相容 API）。
 - **Settings 本機服務端點切換**: 輸入框 + 「LM Studio (1234)」「Ollama (11434)」preset 按鈕，一鍵切換本機推理後端。

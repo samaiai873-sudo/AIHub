@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import useAppSettings from "../hooks/useAppSettings";
 import useApiKeys from "../hooks/useApiKeys";
@@ -19,6 +19,10 @@ import ConversationSidebar from "./ConversationSidebar";
 import MessageList from "./MessageList";
 import Composer from "./Composer";
 import CompareView from "./CompareView";
+import ReplyTargetBar, {
+  type ReplyTargets,
+  TARGET_SLOTS,
+} from "./ReplyTargetBar";
 
 export default function ConversationWorkspace() {
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -75,64 +79,155 @@ export default function ConversationWorkspace() {
     );
   };
 
-  const handleSend = async (content: string, platform?: string, model?: string) => {
-    if (!currentConversation) return;
-
-    // Sprint 9: Conversation Routing — 優先匹配路由規則，可覆蓋 Composer 選擇與對話預設值
-    const routingRule = matchRoutingRule(content, settings.routingRules);
-    let targetPlatform: string;
-    let targetModel: string;
-
-    if (routingRule) {
-      // 路由規則命中：使用規則指定的平台/模型，並移除前綴
-      targetPlatform = routingRule.targetPlatform;
-      const routedPlatform = isValidPlatformId(targetPlatform)
-        ? targetPlatform
-        : (targetPlatform as Platform);
-      targetModel = routingRule.targetModel ?? getDefaultModel(routedPlatform);
-      content = stripRoutingPrefix(content, routingRule);
-    } else {
-      // 無路由規則：優先使用 Composer 選擇的 platform/model，否則 fallback 到對話預設值
-      const platformParam = platform || "";
-      // 接受內建 Platform 或 "custom:<id>"
-      targetPlatform = isValidPlatformId(platformParam)
-        ? platformParam
-        : currentConversation.platform;
-      targetModel = model || currentConversation.model;
+  // Sprint 16: 多模型同時回答 — 上方 4 欄 AI 選擇，每個可 N/A
+  const [replyTargets, setReplyTargets] = useState<ReplyTargets>(() => {
+    try {
+      const saved = localStorage.getItem("aihub-reply-targets");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === TARGET_SLOTS) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore parse error
     }
+    return Array(TARGET_SLOTS).fill(null);
+  });
 
-    // 記住最後使用的內建 Platform（自訂模型不記錄，因為 setLastUsedPlatform 只收 Platform）
-    if (!isCustomPlatformId(targetPlatform)) {
-      setLastUsedPlatform(targetPlatform as Platform);
+  // 持久化到 localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("aihub-reply-targets", JSON.stringify(replyTargets));
+    } catch {
+      // ignore
     }
+  }, [replyTargets]);
 
-    // 統一處理 API Key：
-    // 內建 Provider → apiKeys[targetPlatform]（加密儲存）
-    // 自訂模型 → settings.customModels[customId].apiKey
-    let selectedApiKey: string | undefined;
+  const activeTargets = replyTargets.filter(
+    (t): t is { platform: string; model: string } => t !== null
+  );
+  const hasActiveTarget = activeTargets.length > 0;
+
+  /**
+   * 對單一 target 跑一次 AI 回覆，把 streaming 寫入指定 message id。
+   */
+  const runReplyForTarget = async (
+    convId: string,
+    msgId: string,
+    targetPlatform: string,
+    targetModel: string,
+    prompt: string
+  ) => {
+    // 取得 API Key：內建走 apiKeys，custom 走 customModels 設定
+    let apiKey: string | undefined;
     if (isCustomPlatformId(targetPlatform)) {
       const customId = targetPlatform.slice("custom:".length);
-      selectedApiKey = settings.customModels?.find((m) => m.id === customId)?.apiKey;
-    } else if (isValidPlatformId(targetPlatform)) {
-      selectedApiKey = apiKeys[targetPlatform as Platform];
+      apiKey = settings.customModels?.find((m) => m.id === customId)?.apiKey;
     } else {
-      selectedApiKey = apiKeys[targetPlatform as Platform];
+      apiKey = apiKeys[targetPlatform as Platform];
     }
 
-    addMessage(currentConversation.id, {
+    if (!apiKey) {
+      const label =
+        aiPlatforms.find((item) => item.id === targetPlatform)?.name ??
+        targetPlatform;
+      updateMessage(
+        convId,
+        msgId,
+        `⚠️ ${label} 尚未設定 API Key，請至 Settings 設定。`,
+        "error"
+      );
+      return;
+    }
+
+    const reply = await generateAssistantReply({
+      platform: targetPlatform,
+      model: targetModel,
+      prompt,
+      apiKey,
+      onChunk: (chunk) => updateMessage(convId, msgId, chunk),
+      customModels: settings.customModels ?? [],
+    });
+
+    const isError = reply.usedFallback || Boolean(reply.error);
+    updateMessage(convId, msgId, reply.content, isError ? "error" : "assistant");
+  };
+
+  const handleSend = async (content: string, platform?: string, model?: string) => {
+    if (!currentConversation) return;
+    const convId = currentConversation.id;
+
+    // Sprint 9: Conversation Routing — 路由命中時會覆蓋掉多模型回覆（路由是更明確的指令）
+    const routingRule = matchRoutingRule(content, settings.routingRules);
+    if (routingRule) {
+      content = stripRoutingPrefix(content, routingRule);
+    }
+
+    addMessage(convId, {
       role: "user",
       platform: "user",
       model: "",
       content,
     });
 
-    // 分支 2：Provider 未設定 API Key → 新增一則 System Message，不嘗試打 API
+    // 分支 A：多模型同時回答（有非 N/A target 且沒被路由覆蓋）
+    if (!routingRule && hasActiveTarget) {
+      const assistantMessages = activeTargets.map((t) => ({
+        target: t,
+        msgId: addMessage(convId, {
+          role: "assistant",
+          platform: t.platform,
+          model: t.model,
+          content: "",
+        }),
+      }));
+
+      // 並行打 API（每個 streaming 寫到各自的 message）
+      await Promise.all(
+        assistantMessages.map(({ target, msgId }) =>
+          runReplyForTarget(convId, msgId, target.platform, target.model, content)
+        )
+      );
+      return;
+    }
+
+    // 分支 B：原本單一回覆邏輯
+    let targetPlatform: string;
+    let targetModel: string;
+
+    if (routingRule) {
+      targetPlatform = routingRule.targetPlatform;
+      const routedPlatform = isValidPlatformId(targetPlatform)
+        ? targetPlatform
+        : (targetPlatform as Platform);
+      targetModel = routingRule.targetModel ?? getDefaultModel(routedPlatform);
+    } else {
+      const platformParam = platform || "";
+      targetPlatform = isValidPlatformId(platformParam)
+        ? platformParam
+        : currentConversation.platform;
+      targetModel = model || currentConversation.model;
+    }
+
+    if (!isCustomPlatformId(targetPlatform)) {
+      setLastUsedPlatform(targetPlatform as Platform);
+    }
+
+    let selectedApiKey: string | undefined;
+    if (isCustomPlatformId(targetPlatform)) {
+      const customId = targetPlatform.slice("custom:".length);
+      selectedApiKey = settings.customModels?.find((m) => m.id === customId)?.apiKey;
+    } else {
+      selectedApiKey = apiKeys[targetPlatform as Platform];
+    }
+
     if (!selectedApiKey) {
       const platformLabel =
         aiPlatforms.find((item) => item.id === targetPlatform)?.name ?? targetPlatform;
       const isGemini = targetPlatform === "gemini";
 
-      addMessage(currentConversation.id, {
+      addMessage(convId, {
         role: "system",
         platform: targetPlatform,
         model: targetModel,
@@ -151,9 +246,7 @@ export default function ConversationWorkspace() {
       return;
     }
 
-    // 分支 1 / 3：Provider 已設定，實際打 API。
-    // 成功 → 更新成 assistant 訊息；失敗 → 更新成 error 訊息。
-    const assistantMessageId = addMessage(currentConversation.id, {
+    const assistantMessageId = addMessage(convId, {
       role: "assistant",
       platform: targetPlatform,
       model: targetModel,
@@ -166,19 +259,14 @@ export default function ConversationWorkspace() {
       prompt: content,
       apiKey: selectedApiKey,
       onChunk: (chunk) => {
-        updateMessage(
-          currentConversation.id,
-          assistantMessageId,
-          chunk
-        );
+        updateMessage(convId, assistantMessageId, chunk);
       },
       customModels: settings.customModels ?? [],
     });
 
     const isError = reply.usedFallback || Boolean(reply.error);
-
     updateMessage(
-      currentConversation.id,
+      convId,
       assistantMessageId,
       reply.content,
       isError ? "error" : "assistant"
@@ -518,6 +606,14 @@ export default function ConversationWorkspace() {
             currentConversation?.messages ?? []
           }
         />
+
+        {currentConversation && (
+          <ReplyTargetBar
+            targets={replyTargets}
+            onTargetsChange={setReplyTargets}
+            customModels={settings.customModels ?? []}
+          />
+        )}
 
         {currentConversation ? (
           <Composer

@@ -319,6 +319,7 @@ npm run build        # 輸出到 dist/
 | API Keys 管理 | `src/hooks/useApiKeys.ts` |
 | 設定管理 + 自訂模型 | `src/hooks/useAppSettings.ts` |
 | 自訂模型 UI (新增 / 修改 / 移除) | `src/components/CustomModels.tsx` |
+| 多模型回覆選擇列 (4 欄 + N/A) | `src/components/ReplyTargetBar.tsx` |
 | 左側導航 (含自訂模型) | `src/components/Sidebar.tsx` |
 | Extension Background | `extension/background/background.js` |
 | Native Messaging Host | `extension/native-host/aihub_native_host.py` |
@@ -355,6 +356,15 @@ npm run build        # 輸出到 dist/
 - ✅ `CustomModels.tsx` 支援「修改」按鈕（原僅新增 / 移除）：
   - 編輯模式保留原 model id（不破壞既有 Conversation 引用）
   - 移除前加確認對話框
+- ✅ 修復 `customProvider` 「Failed to fetch」誤導訊息：分三種情況（缺 Key / 網路 CORS / HTTP 4xx-5xx）
+- ✅ `customProvider` 加 endpoint 健全性檢查（空字串 / 非法 URL / 非 http(s) protocol）
+- ✅ Settings → 自訂模型 加 CORS 限制黃色警示框（NVIDIA NIM 等未開放 CORS 之 API）
+- ✅ **多模型同時回答（Sprint 16）**：
+  - 對話框上方新增 4 個 AI 選擇欄（`ReplyTargetBar.tsx`）
+  - 每個可選 N/A（不參與）或任一內建 / 自訂模型
+  - 送出後所有非 N/A target 並行打 API，各自回覆加到對話裡
+  - target state 持久化到 localStorage (`aihub-reply-targets`)
+  - 路由規則命中時覆蓋多模型回覆（路由是更明確指令）
 
 ### v1.0.2 (2026-07-17)
 - ✅ 實作 Grok Provider（xAI API，grok-4.5/grok-4，SSE 串流）
