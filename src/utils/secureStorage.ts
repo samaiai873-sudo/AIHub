@@ -1,7 +1,7 @@
 /**
  * Secure Storage Utility using Web Crypto API (AES-GCM)
  * 
- * Uses a randomly generated encryption key stored in localStorage (non-extractable).
+ * Uses a randomly generated encryption key stored in IndexedDB (non-extractable).
  * The key is generated once per browser/profile and persists across sessions.
  * Data is encrypted with AES-GCM (256-bit key, 96-bit IV).
  * 
@@ -25,28 +25,143 @@ const ENCRYPTION_VERSION = 2; // Incremented for new format
 
 export { ENCRYPTION_VERSION };
 
-// Key storage key in localStorage
+// Key storage key in IndexedDB / legacy localStorage fallback
 const MASTER_KEY_STORAGE_KEY = "aihub-master-encryption-key";
+const KEY_DB_NAME = "aihub-secure-storage";
+const KEY_DB_VERSION = 1;
+const KEY_STORE_NAME = "crypto-keys";
+const KEY_RECORD_ID = "master-key";
+
+let cachedMasterKey: CryptoKey | null = null;
+
+function isIndexedDbAvailable(): boolean {
+  return typeof indexedDB !== "undefined";
+}
+
+function openKeyDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(KEY_DB_NAME, KEY_DB_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(KEY_STORE_NAME)) {
+        db.createObjectStore(KEY_STORE_NAME);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function readStoredKeyMaterial(): Promise<string | null> {
+  if (isIndexedDbAvailable()) {
+    try {
+      const db = await openKeyDatabase();
+      return await new Promise((resolve, reject) => {
+        const transaction = db.transaction(KEY_STORE_NAME, "readonly");
+        const store = transaction.objectStore(KEY_STORE_NAME);
+        const request = store.get(KEY_RECORD_ID);
+
+        request.onsuccess = () => resolve(request.result ?? null);
+        request.onerror = () => reject(request.error);
+        transaction.oncomplete = () => db.close();
+        transaction.onerror = () => {
+          db.close();
+          reject(transaction.error);
+        };
+      });
+    } catch (error) {
+      console.warn("Failed to read master key from IndexedDB:", error);
+    }
+  }
+
+  return localStorage.getItem(MASTER_KEY_STORAGE_KEY);
+}
+
+async function writeStoredKeyMaterial(value: string): Promise<void> {
+  if (isIndexedDbAvailable()) {
+    try {
+      const db = await openKeyDatabase();
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(KEY_STORE_NAME, "readwrite");
+        const store = transaction.objectStore(KEY_STORE_NAME);
+        store.put(value, KEY_RECORD_ID);
+
+        transaction.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        transaction.onerror = () => {
+          db.close();
+          reject(transaction.error);
+        };
+      });
+      localStorage.removeItem(MASTER_KEY_STORAGE_KEY);
+      return;
+    } catch (error) {
+      console.warn("Failed to write master key to IndexedDB, falling back to localStorage:", error);
+    }
+  }
+
+  localStorage.setItem(MASTER_KEY_STORAGE_KEY, value);
+}
+
+async function removeStoredKeyMaterial(): Promise<void> {
+  if (isIndexedDbAvailable()) {
+    try {
+      const db = await openKeyDatabase();
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(KEY_STORE_NAME, "readwrite");
+        const store = transaction.objectStore(KEY_STORE_NAME);
+        store.delete(KEY_RECORD_ID);
+
+        transaction.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        transaction.onerror = () => {
+          db.close();
+          reject(transaction.error);
+        };
+      });
+    } catch (error) {
+      console.warn("Failed to remove master key from IndexedDB:", error);
+    }
+  }
+
+  localStorage.removeItem(MASTER_KEY_STORAGE_KEY);
+}
+
+export async function clearMasterKeyMaterial(): Promise<void> {
+  cachedMasterKey = null;
+  await removeStoredKeyMaterial();
+}
 
 /**
  * Generate or retrieve the master encryption key
  * The key is generated once and stored in localStorage (non-extractable)
  */
 async function getOrCreateMasterKey(): Promise<CryptoKey> {
+  if (cachedMasterKey) {
+    return cachedMasterKey;
+  }
+
   // Check if key already exists in localStorage
-  const storedKeyData = localStorage.getItem(MASTER_KEY_STORAGE_KEY);
-  
+  const storedKeyData = await readStoredKeyMaterial();
+
   if (storedKeyData) {
     try {
       // Import the stored raw key
       const rawKey = Uint8Array.from(atob(storedKeyData), c => c.charCodeAt(0));
-      return await crypto.subtle.importKey(
+      cachedMasterKey = await crypto.subtle.importKey(
         "raw",
         rawKey,
         { name: AES_GCM_ALGO, length: 256 },
         false, // not extractable
         ["encrypt", "decrypt"]
       );
+      return cachedMasterKey;
     } catch (error) {
       console.warn("Failed to import stored key, generating new one:", error);
       // Fall through to generate new key
@@ -59,7 +174,7 @@ async function getOrCreateMasterKey(): Promise<CryptoKey> {
       name: AES_GCM_ALGO,
       length: 256,
     },
-    true, // extractable - needed to store raw key in localStorage
+    true, // temporarily extractable so we can migrate legacy storage once
     ["encrypt", "decrypt"]
   );
   
@@ -67,9 +182,17 @@ async function getOrCreateMasterKey(): Promise<CryptoKey> {
   const rawKey = await crypto.subtle.exportKey("raw", key);
   const rawKeyArray = new Uint8Array(rawKey);
   const keyString = btoa(String.fromCharCode(...rawKeyArray));
-  localStorage.setItem(MASTER_KEY_STORAGE_KEY, keyString);
-  
-  return key;
+  await writeStoredKeyMaterial(keyString);
+
+  cachedMasterKey = await crypto.subtle.importKey(
+    "raw",
+    rawKeyArray,
+    { name: AES_GCM_ALGO, length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+
+  return cachedMasterKey;
 }
 
 /**
@@ -150,7 +273,8 @@ export function isSecureStorageAvailable(): boolean {
     typeof crypto.subtle !== "undefined" &&
     typeof crypto.subtle.generateKey === "function" &&
     typeof crypto.subtle.encrypt === "function" &&
-    typeof crypto.subtle.decrypt === "function"
+    typeof crypto.subtle.decrypt === "function" &&
+    (typeof indexedDB !== "undefined" || typeof localStorage !== "undefined")
   );
 }
 

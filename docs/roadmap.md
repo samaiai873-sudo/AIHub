@@ -73,13 +73,21 @@
 |------|------|------|
 | Gemini API 模型名稱更新 | ✅ 完成 | gemini-1.5-flash → gemini-3.5-flash |
 | Cross-platform 模型汙染修復 | ✅ 完成 | normalizeConversation 加入驗證 |
-| NVIDIA Nemotron Provider | ✅ 完成 | 3 個模型支援 |
+| NVIDIA Nemotron Provider | 🗂️ 歷史項目 | 曾於 v1.0.1 支援，已在 v1.1.0 移除 |
 | Custom Models 管理 | ✅ 完成 | Settings UI 支援 |
+
+## Sprint 15、16（已完成 ✅）- v1.1.0
+
+- 修正自訂模型 `custom:<id>` platform 在對話建立、切換與重新生成時被錯誤回退的問題
+- Local Provider 統一支援 Ollama 與 LM Studio 的 OpenAI 相容 API，並可在 Settings 切換端點
+- 移除 NVIDIA Nemotron 與 Ollama／LM Studio 的獨立 Provider
+- 自訂模型支援原地修改名稱、端點、模型 ID 與 API Key
+- 新增最多 4 個內建或自訂模型的並行回覆選擇列（ReplyTargetBar）
 
 
 ---
 
-## v1.1.0 規劃中
+## 後續規劃（v1.2+）
 
 ### 核心優化
 - [ ] 效能優化：大量對話時的虛擬化渲染

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { clearMasterKeyMaterial } from "../utils/secureStorage";
 
 export default function ResetAllData() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +19,7 @@ export default function ResetAllData() {
     try {
       // Clear all localStorage
       localStorage.clear();
+      await clearMasterKeyMaterial();
       
       // Reload the page to reset all state
       window.location.reload();

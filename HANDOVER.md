@@ -1,4 +1,4 @@
-# AIHub 專案交接文件（v0.8 Sprint 8 完成，準備 Sprint 9）
+# AIHub 專案交接文件（v1.1.0／Sprint 16 完成）
 
 ---
 
@@ -6,11 +6,12 @@
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| **版本** | v0.8.0 | Sprint 8 完成 ✅ |
-| **核心功能** | 對話管理、Prompt Library、AI Agent 管理、全域搜尋、專案分類、匯出 | 全部可用 |
-| **AI Provider** | ChatGPT、Claude、Gemini 三大 Provider 真實 API 串接完成 | 全部支援 Streaming |
+| **版本** | v1.1.0 | Sprint 16 完成 ✅ |
+| **核心功能** | 對話管理、Prompt Library、AI Agent 管理、全域搜尋、專案分類、匯出、比較與路由 | 全部可用 |
+| **AI Provider** | ChatGPT、Claude、Gemini、Grok、Local 與自訂模型 | 全部支援 Streaming |
 | **架構** | React 19 + TypeScript 6 + Vite 8 + Context API + LocalStorage | 乾淨、可擴展 |
-| **下一階段** | Sprint 9：Reply with...、Multi-AI Conversation、Conversation Routing | 待開發 |
+| **最新功能** | 最多 4 個模型同時回答、Local Provider、自訂模型編輯 | 已完成 |
+| **下一階段** | v1.2+：效能、離線/PWA、匯入匯出、參數調整與 i18n | 見 `docs/roadmap.md` |
 
 ---
 
@@ -18,14 +19,16 @@
 
 ### Provider 抽象層（`src/providers/`）
 ```
-types.ts          → AIProvider 介面、SendMessageParams、AssistantReply
-registry.ts       → Provider Registry（單例模式，輕鬆新增 Provider）
-index.ts          → 統一入口 generateAssistantReply()
-chatgptProvider.ts   → OpenAI Chat Completions (SSE Streaming + Vite Proxy)
-claudeProvider.ts    → Anthropic Messages (SSE Streaming + dangerous-direct-browser-access)
-geminiProvider.ts    → Google Generative Language (JSON Lines Streaming + streamGenerateContent)
-unsupportedProvider.ts → 佔位 Provider
-utils.ts          → createFallbackReply() 統一錯誤回退
+types.ts             → AIProvider 介面、SendMessageParams、AssistantReply
+registry.ts          → Provider Registry
+index.ts             → 統一入口 generateAssistantReply()
+chatgptProvider.ts   → OpenAI Chat Completions（SSE + Vite Proxy）
+claudeProvider.ts    → Anthropic Messages（SSE）
+geminiProvider.ts    → Google Generative Language（SSE）
+grokProvider.ts      → xAI Chat Completions（SSE）
+localProvider.ts     → Ollama / LM Studio 的統一 OpenAI 相容 Provider
+customProvider.ts    → 使用者設定的 OpenAI 相容端點
+utils.ts             → 統一錯誤回退與 CORS／網路錯誤提示
 ```
 **新增 Provider 只需：**
 1. 建立 `xxxProvider.ts` 實作 `AIProvider` 介面
@@ -34,11 +37,13 @@ utils.ts          → createFallbackReply() 統一錯誤回退
 
 ### 資料流
 ```
-User Input (Composer)
+User Input (Composer／ReplyTargetBar)
     ↓
 useConversations.addMessage() → LocalStorage 更新
     ↓
 ConversationWorkspace.handleSend()
+    ↓
+依 Routing Rule 或 Reply Targets 決定一個或多個目標模型
     ↓
 generateAssistantReply({ platform, model, prompt, apiKey, onChunk })
     ↓
@@ -57,7 +62,7 @@ Assistant Reply 寫入 LocalStorage
 ## 3. 開發環境啟動
 
 ```bash
-cd /Users/ai-pc/Desktop/aihub
+cd /Users/ai-pc/Desktop/AIHub
 npm install
 npm run dev          # 開發伺服器 (localhost:5173)
 npm run build        # Production Build
@@ -68,44 +73,14 @@ npm run lint         # ESLint 檢查
 
 ---
 
-## 4. Sprint 9 開發指南（優先序已定）
+## 4. v1.1 後續工作建議
 
-### P0: Reply with...（同一輪對話一鍵換模型重答）
-**核心價值**：使用者看到不滿意的回覆，點選「Reply with Claude」即可保留上下文、換模型重新生成。
+目前 Sprint 9 的 Reply with...、單一 Thread 多模型與 Conversation Routing，及 Sprint 16 的最多四模型並行回覆均已完成。下一輪工作請以 `docs/roadmap.md` 為準：
 
-**實作切入點**：
-1. `Message` 型別新增 `regenerating?: boolean`、`originalModel?: string` 欄位
-2. `useConversations` 新增 `regenerateWith(conversationId, messageIndex, newPlatform, newModel)`
-3. `MessageBubble` 右上角加入選單：`Reply with ChatGPT` / `Reply with Claude` / `Reply with Gemini`
-4. 邏輯：截取 `messages[0...messageIndex]` 為新上下文，呼叫新 Provider，結果取代原 assistant message
-
-**預估工時**：4-6 小時
-
----
-
-### P1: Multi-AI Conversation（單一 Thread 串接多模型）
-**核心價值**：一個對話中，User 問程式用 GPT-4o，問寫作用 Claude，問搜尋用 Gemini。
-
-**實作切入點**：
-1. `Message` 已有 `platform` / `model` 欄位（現行每則訊息獨立記錄）
-2. `Composer` 右側新增模型下拉選單（預設跟隨 Conversation 當前模型，可單輪切換）
-3. `handleSend` 讀取 Composer 選擇的目標模型，而非 Conversation 預設模型
-4. UI：訊息氣泡顯示模型標籤（已有），Composer 顯示當前目標模型
-
-**預估工時**：3-4 小時
-
----
-
-### P2: Conversation Routing（依關鍵字/指令自動導向模型）
-**核心價值**：`@claude 幫我寫文案`、`/code python快速排序`、`@gemini 搜尋最新新聞` 自動導向對應模型。
-
-**實作切入點**：
-1. `constants/routing.ts` 定義 `RoutingRule = { pattern: RegExp, platform: Platform, model: string, prefix?: string }`
-2. `useAppSettings` 新增 `routingRules` 設定（預設內建常用規則）
-3. `ConversationWorkspace.handleSend` 發送前先跑 `matchRoutingRule(prompt)`，命中則覆寫目標平台/模型
-4. Settings 頁面加入 Routing Rules 編輯器
-
-**預估工時**：4-5 小時
+1. **效能與可靠性**：大量對話的虛擬化渲染、測試覆蓋與離線快取。
+2. **使用體驗**：PWA、Prompt 版本控制、模型參數調整與 i18n。
+3. **資料可攜性**：補強 Markdown/PDF 匯出與對話匯入。
+4. **擴充功能與 MCP**：網頁 Context 注入、Popup 模式、MCP Server 管理與工具結果快取。
 
 ---
 
@@ -126,11 +101,11 @@ npm run lint         # ESLint 檢查
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| API Key 明文存 LocalStorage | ⚠️ 待加密 | 建議用 Web Crypto API (AES-GCM) + 機器指紋衍生金鑰 |
-| 無測試覆蓋 | ⚠️ 待補 | 建議引入 Vitest + React Testing Library |
-| 無 CI/CD | ⚠️ 待補 | GitHub Actions: lint → typecheck → build → test |
-| 僅支援文字對話 | 📋 規劃中 | 圖片/檔案上傳、Function Calling 預留給 v1.0 MCP |
-| Grok/Perplexity/Copilot 為佔位 | 📋 規劃中 | 同樣實作 `AIProvider` 介面即可啟用 |
+| API Key 明文存 LocalStorage | ✅ 已改善 | 使用 Web Crypto AES-GCM 加密儲存 |
+| 測試覆蓋不足 | ⚠️ 待補 | 已有 Vitest 基礎測試，仍需擴充元件與 Provider 測試 |
+| CI/CD | ✅ 已有 | GitHub Actions 執行 lint、typecheck、build、test |
+| 多模態輸入與檔案上傳 | 📋 規劃中 | 可配合未來知識庫／RAG 功能設計 |
+| Provider 擴充 | 📋 可持續擴充 | Grok、Local 與自訂 OpenAI 相容端點已支援；新增平台依 `AIProvider` 介面實作 |
 
 ---
 
@@ -164,8 +139,9 @@ cp src/providers/geminiProvider.ts src/providers/xxxProvider.ts
 ├── components/
 │   ├── ConversationWorkspace.tsx  # 核心工作區、API 呼叫邏輯
 │   ├── ConversationSidebar.tsx    # 對話列表、搜尋、Context Menu、專案分組
-│   ├── Composer.tsx               # 輸入區、Send/Open in Browser
+│   ├── Composer.tsx               # 多行輸入區；Shift+Enter 換行、Enter 發送
 │   ├── MessageList.tsx / MessageBubble.tsx
+│   ├── ReplyTargetBar.tsx         # 最多 4 個模型並行回答目標
 │   ├── GlobalSearch.tsx           # Cmd/Ctrl+K 全域搜尋
 │   ├── ProjectManager.tsx         # 專案 CRUD
 │   ├── PromptLibrary.tsx / PromptForm.tsx
@@ -188,7 +164,6 @@ cp src/providers/geminiProvider.ts src/providers/xxxProvider.ts
 │   ├── conversation.ts            # Conversation、Message
 │   └── prompt.ts
 ├── utils/
-│   ├── browserWorkflow.ts         # 複製 Prompt + 開啟官網
 │   └── conversationExport.ts      # Markdown/JSON 匯出
 └── data/
     └── aiPlatforms.ts             # 平台定義（名稱、圖示、官網、模型清單）
@@ -198,11 +173,11 @@ cp src/providers/geminiProvider.ts src/providers/xxxProvider.ts
 
 ## 9. 交接人聯繫
 
-- 專案位置：`/Users/ai-pc/Desktop/aihub`
+- 專案位置：`/Users/ai-pc/Desktop/AIHub`
 - Git Remote：`origin` (GitHub)
 - 主分支：`main`
 - 文件：`docs/roadmap.md`、`docs/sprint-history.md`、`docs/changelog.md`、`AIHub_v0.7_Project_Report.md`、`HANDOVER.md`
 
 ---
 
-**祝開發順利！Sprint 9 的三大功能將讓 AIHub 從「多模型切換工具」進化為「真正的多模型協作工作台」。** 🚀
+**目前 AIHub 已具備多模型協作、並行回覆與本機模型整合能力；後續請以效能、資料可攜性與擴充性為優先。** 🚀

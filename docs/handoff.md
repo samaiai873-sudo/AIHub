@@ -1,7 +1,7 @@
 # AIHub 專案交接文件
 
 > **版本**: 1.1.0  
-> **更新日期**: 2026-07-18  
+> **更新日期**: 2026-07-22  
 > **專案狀態**: 生產就緒，可提交 Chrome Web Store 審核
 
 ---
@@ -94,6 +94,15 @@ interface AIProvider {
 3. 使用本機 localhost 服務（Ollama / LM Studio）— 本身允許跨來源
 
 Settings → 自訂模型 區塊有黃色提醒框，列出上述限制。
+
+#### Native Messaging Host 安裝
+Native Messaging Host 需手動執行安裝腳本，並帶入 Chrome 擴充功能的 32 位小寫 extension ID：
+
+```bash
+python extension/native-host/install.py <extension_id>
+```
+
+`<extension_id>` 會寫入 `allowed_origins`，避免通用萬用字元設定造成安裝與審核風險。
 
 #### Context Pattern (狀態管理)
 **Context 列表**:
@@ -289,7 +298,7 @@ npm run build        # 輸出到 dist/
 | 問題 | 解決方案 |
 |------|----------|
 | `host_permissions: <all_urls>` 審核不過 | 僅用於 AI API 直連，不存取網頁內容，提供權限說明文件 |
-| Native Messaging 無法連線 | 確認 `install.py` 已執行，檢查 manifest 路徑 |
+| Native Messaging 無法連線 | 確認 `install.py <extension_id>` 已執行，檢查 manifest 路徑 |
 | 本機推理（Ollama / LM Studio）連線失敗 | 確認本地服務啟動，至 Settings → 本機服務端點檢查 Base URL（LM Studio 1234 / Ollama 11434） |
 | 自訂模型「Failed to fetch」 | 多為 CORS 擋下（如 NVIDIA NIM 未開放 CORS）。網頁版請改用擴充功能版、OpenRouter 或本機服務。詳見 §2.1 CORS 限制 |
 | Gemini API 回應為空 | 確認串流使用 `alt=sse` 參數 (v1.0.2 修復) |

@@ -8,9 +8,16 @@ This script installs the native messaging host manifest for Chrome/Edge.
 import os
 import json
 import sys
-import shutil
 import platform
-import subprocess
+
+def validate_extension_id(extension_id: str) -> str:
+    """Validate Chrome extension ID format."""
+    cleaned = extension_id.strip()
+    if not cleaned or len(cleaned) != 32 or any(c not in "abcdefghijklmnop" for c in cleaned):
+        raise ValueError(
+            "Invalid extension ID. Please pass the 32-character lowercase extension ID."
+        )
+    return cleaned
 
 def get_chrome_native_messaging_dir():
     """Get the Chrome native messaging directory for the current OS"""
@@ -36,7 +43,7 @@ def get_chrome_native_messaging_dir():
         return []
     return []
 
-def install_native_host():
+def install_native_host(extension_id: str):
     """Install the native messaging host manifest"""
     # Get paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -51,6 +58,7 @@ def install_native_host():
         manifest = json.load(f)
     
     manifest["path"] = host_script
+    manifest["allowed_origins"] = [f"chrome-extension://{extension_id}/"]
     
     system = platform.system()
     
@@ -130,6 +138,16 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "uninstall":
         success = uninstall_native_host()
     else:
-        success = install_native_host()
+        if len(sys.argv) < 2:
+            print("Usage: install.py <extension_id>")
+            sys.exit(1)
+
+        try:
+            extension_id = validate_extension_id(sys.argv[1])
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+
+        success = install_native_host(extension_id)
     
     sys.exit(0 if success else 1)

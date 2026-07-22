@@ -1,10 +1,10 @@
 # AIHub
 
-> 多 AI 聊天介面 · 瀏覽器綁定端到端加密 · Chrome Extension (MV3)
+> 多 AI 聊天介面 · 瀏覽器綁定加密儲存 · Chrome Extension (MV3)
 
-AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，加上**自訂模型**（OpenAI 相容 API 端點），整合 Model Context Protocol (MCP) 支援本地工具調用，採用**瀏覽器綁定 Web Crypto 加密**儲存（無需主密碼）。
+AIHub 是一個**多 AI 聊天介面**，內建支援 ChatGPT、Claude、Gemini、Grok 與 Local Provider；Local Provider 可連接 Ollama 或 LM Studio 的 OpenAI 相容 API。也可新增**自訂模型**（OpenAI 相容 API 端點），並整合 Model Context Protocol (MCP) 支援本地工具調用。資料採用**瀏覽器綁定 Web Crypto 加密**儲存，無需主密碼。
 
-![Version](https://img.shields.io/badge/version-1.0.2-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
@@ -23,15 +23,14 @@ AIHub 是一個**多 AI 聊天介面**，支援 ChatGPT、Claude、Gemini、Grok
 | **Gemini** (Google) | SSE | `streamGenerateContent` 端點（`alt=sse`） |
 | **Grok** (xAI) | SSE | `api.x.ai/v1/chat/completions`，模型 `grok-4.5` / `grok-4` |
 | **Custom** | SSE | OpenAI 相容 API 端點，使用者自訂 |
-| **Ollama** | SSE | 本地模型，模型自動探索，自訂端點 |
-| **LM Studio** | SSE | OpenAI 相容 API，連線狀態檢測 |
-| **NVIDIA Nemotron** | SSE | nemotron-3-ultra / nemotron-4-340b / nemotron-3-8b |
+| **Local** | SSE | 統一連接 Ollama 或 LM Studio 的 OpenAI 相容 API；可在 Settings 切換端點並自動探索模型 |
 
 ### 核心功能
 
 - **多模型並排對比** (Compare View) — 多模型同時回答，Pick Winner
 - **Reply with...** — 同一輪對話一鍵換模型重答
 - **Multi-AI Conversation** — 單一 Thread 串接多模型
+- **多模型同時回答** — 最多選擇 4 個內建或自訂模型並行回覆
 - **Conversation Routing** — 依關鍵字/指令自動導向不同模型（`@claude`、`/code` 等）
 - **Custom Models** — 自訂模型管理（Settings UI）
 - **Conversation CRUD** — 建立/搜尋/收藏/專案分組/匯出
@@ -109,8 +108,10 @@ npm run build        # 輸出到 dist/
 
 ```bash
 # 安裝 Native Messaging Host（用於 MCP STDIO）
-python extension/native-host/install.py
+python extension/native-host/install.py <extension_id>
 ```
+
+`<extension_id>` 請填入 Chrome 擴充功能的 32 位小寫 extension ID。
 
 ---
 
@@ -128,9 +129,7 @@ AIHub/
 │   │   ├── geminiProvider.ts
 │   │   ├── grokProvider.ts
 │   │   ├── customProvider.ts
-│   │   ├── ollamaProvider.ts
-│   │   ├── lmstudioProvider.ts
-│   │   ├── nvidiaProvider.ts
+│   │   ├── localProvider.ts       # Ollama / LM Studio 的統一 Provider
 │   │   └── registry.ts           # 統一註冊管理
 │   ├── utils/                    # 工具函式（加密、匯出等）
 │   ├── constants/                # 常數定義
@@ -224,7 +223,7 @@ AES-GCM（每筆資料獨立 IV）→ Encrypted Blob → localStorage / chrome.s
 
 ## 🗺 路線圖
 
-### v1.1.0 規劃中
+### 後續規劃（v1.2+）
 
 - 效能優化：大量對話虛擬化渲染
 - 離線支援：Service Worker 快取策略
@@ -250,7 +249,7 @@ AES-GCM（每筆資料獨立 IV）→ Encrypted Blob → localStorage / chrome.s
 
 | 文件 | 說明 |
 |------|------|
-| [交接文件](docs/handoff.md) | 專案完整交接說明 |
+| [交接文件](HANDOVER.md) | 專案完整交接說明 |
 | [變更日誌](docs/changelog.md) | 版本變更記錄 |
 | [Sprint 歷程](docs/sprint-history.md) | 開發 Sprint 記錄 |
 | [路線圖](docs/roadmap.md) | 功能規劃與願景 |

@@ -22,10 +22,20 @@ interface AIProvider {
 | Claude | `claudeProvider.ts` | SSE | `api.anthropic.com/v1/messages` |
 | Gemini | `geminiProvider.ts` | SSE (`alt=sse`) | `generativelanguage.googleapis.com/v1beta` |
 | Grok | `grokProvider.ts` | SSE | `api.x.ai/v1/chat/completions` |
-| Local | `localProvider.ts` | SSE | OpenAI 相容端點（預設 `localhost:1234/v1`，可切 `localhost:11434/v1`） |
+| Local | `localProvider.ts` | SSE | OpenAI 相容端點（預設 `http://localhost:1234/v1`，可切 `http://localhost:11434/v1`） |
 | Custom | `customProvider.ts` | SSE | 使用者自訂端點 (OpenAI 相容) |
 
-> **Local Provider 說明**：Ollama 與 LM Studio 兩者皆實作 OpenAI 相容 API（`/v1/chat/completions`、`/v1/models`），因此合併為單一 `local` Provider。使用者於 Settings 選擇對應 Base URL（或點快速preset 按鈕切換）即可。UI 模型列表為靜態預設，可於 Provider 內呼叫 `fetchLocalModels()` 動態從 `/v1/models` 抓取。
+> **Local Provider 說明**：Ollama 與 LM Studio 兩者皆實作 OpenAI 相容 API（`/v1/chat/completions`、`/v1/models`），因此合併為單一 `local` Provider。使用者於 Settings 選擇對應 Base URL（或點快速 preset 按鈕切換）即可。UI 模型列表為靜態預設，可於 Provider 內呼叫 `fetchLocalModels()` 動態從 `/v1/models` 抓取。
+
+## Native Messaging Host
+
+Native Messaging Host 的安裝不會由 `npm install` 自動執行，必須手動提供 extension ID：
+
+```bash
+python extension/native-host/install.py <extension_id>
+```
+
+`<extension_id>` 需為 Chrome 擴充功能的 32 位小寫 ID，且會寫入 manifest 的 `allowed_origins`。
 
 ## Custom Provider
 

@@ -93,21 +93,24 @@ export default function Composer({
           </select>
         )}
 
-        <input
+        <textarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
               send();
             }
           }}
-          placeholder="輸入 Prompt..."
+          placeholder="輸入 Prompt...（Shift+Enter 換行，Enter 發送）"
+          rows={1}
           style={{
             flex: 1,
             minWidth: 200,
             padding: 12,
             borderRadius: 8,
             border: "none",
+            resize: "vertical",
           }}
         />
 
