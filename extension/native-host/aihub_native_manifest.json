@@ -4,6 +4,6 @@
   "path": "native-host/aihub_native_host.py",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://*"
+    "chrome-extension://REPLACE_WITH_REAL_EXTENSION_ID/"
   ]
 }

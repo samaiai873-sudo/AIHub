@@ -198,12 +198,12 @@
         <header>
             <div class="logo">AI</div>
             <h1>AIHub 隱私權政策</h1>
-            <p class="meta">最後更新：2026年7月17日 | 版本 1.0.2</p>
+            <p class="meta">最後更新：2026年7月19日 | 版本 1.1.0</p>
         </header>
 
         <section>
             <h2>1. 簡介</h2>
-            <p>歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，支援 ChatGPT、Claude、Gemini、Grok、Ollama、LM Studio、NVIDIA Nemotron 等多種 AI 提供商，加上自訂模型（OpenAI 相容 API 端點），並整合 Model Context Protocol (MCP) 以支援本地工具調用。</p>
+            <p>歡迎使用 AIHub（「我們」、「本擴充功能」或「擴充功能」）。AIHub 是一個多 AI 聊天介面瀏覽器擴充功能，內建支援 ChatGPT、Claude、Gemini、Grok 與 Local Provider；Local Provider 可連接 Ollama 或 LM Studio 的 OpenAI 相容 API。使用者亦可新增自訂模型（OpenAI 相容 API 端點），並可透過 Model Context Protocol (MCP) 使用本地工具。</p>
             <p>本隱私權政策說明我們如何收集、使用、儲存和保護您的資料。使用本擴充功能即表示您同意本政策的條款。</p>
         </section>
 
@@ -248,10 +248,8 @@
                     <tr><td><code>api.anthropic.com</code></td><td>Claude API</td><td>您的提示詞 + API Key (標頭)</td></tr>
                     <tr><td><code>generativelanguage.googleapis.com</code></td><td>Gemini API</td><td>您的提示詞 + API Key (查詢參數)</td></tr>
                     <tr><td><code>api.x.ai</code></td><td>Grok API (xAI)</td><td>您的提示詞 + API Key (標頭)</td></tr>
-                    <tr><td><code>integrate.api.nvidia.com</code></td><td>NVIDIA Nemotron API</td><td>您的提示詞 + API Key (標頭)</td></tr>
                     <tr><td>您設定的自訂 API 端點</td><td>自訂模型 (OpenAI 相容)</td><td>您的提示詞 + API Key (標頭，選用)</td></tr>
-                    <tr><td><code>localhost:11434</code></td><td>Ollama 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
-                    <tr><td><code>localhost:1234</code></td><td>LM Studio 本地服務</td><td>您的提示詞 (無 API Key)</td></tr>
+                    <tr><td>您設定的 Local Provider 端點</td><td>Ollama 或 LM Studio 的 OpenAI 相容 API</td><td>您的提示詞（無 API Key）</td></tr>
                     <tr><td>您設定的 MCP SSE 端點</td><td>MCP 伺服器連線</td><td>工具調用參數/結果</td></tr>
                 </tbody>
             </table>
@@ -305,11 +303,12 @@
         </section>
 
         <section>
-            <h2>5. 本地模型支援 (Ollama / LM Studio)</h2>
+            <h2>5. Local Provider（Ollama / LM Studio）</h2>
             <ul>
-                <li>連線至 <code>http://localhost:11434</code> (Ollama) 或 <code>http://localhost:1234</code> (LM Studio)</li>
+                <li>使用統一的 Local Provider，並可在 Settings 設定本機服務端點</li>
+                <li>預設端點為 <code>http://localhost:1234/v1</code>（LM Studio）；也可使用 Ollama 的 OpenAI 相容端點 <code>http://localhost:11434/v1</code></li>
                 <li><strong>完全離線運作</strong>，無任何資料傳送至外部伺服器</li>
-                <li>模型列表從本地 API 取得 (<code>/api/tags</code> 或 <code>/v1/models</code>)</li>
+                <li>模型列表從本機 OpenAI 相容 API 的 <code>/v1/models</code> 取得</li>
                 <li>無需註冊帳號、無需 API 金鑰</li>
             </ul>
         </section>

@@ -4,7 +4,8 @@
   "description": "AIHub Native Messaging Host for MCP STDIO Transport",
   "main": "aihub_native_host.py",
   "scripts": {
-    "install": "python3 install.py",
+    "setup": "python3 install.py",
+    "install": "node -e \"console.log('Use: python3 install.py <extension_id>')\"",
     "uninstall": "python3 install.py uninstall",
     "test": "python3 aihub_native_host.py"
   },
